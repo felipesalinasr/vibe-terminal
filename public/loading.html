@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Vibe Terminal</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #0a0c10;
+    color: #00ff64;
+    font-family: 'SF Mono', 'Menlo', monospace;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .prompt {
+    font-size: 24px;
+    animation: blink 1s steps(2) infinite;
+  }
+  @keyframes blink {
+    0% { opacity: 1; }
+    50% { opacity: 0; }
+  }
+  .label {
+    font-size: 12px;
+    color: #444;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+  }
+</style>
+</head>
+<body>
+  <div class="prompt">&#x25b6; _</div>
+  <div class="label">starting vibe terminal</div>
+  <script>
+    (function check() {
+      fetch('/api/sessions').then(r => {
+        if (r.ok) window.location.href = '/';
+        else setTimeout(check, 200);
+      }).catch(() => setTimeout(check, 200));
+    })();
+  </script>
+</body>
+</html>

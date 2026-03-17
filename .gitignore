@@ -1,0 +1,9 @@
+node_modules/
+*.log
+.env
+.env.local
+.DS_Store
+.playwright-mcp/
+
+# Compiled binaries (built at runtime)
+server/browse-helper

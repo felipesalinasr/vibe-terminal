@@ -1,0 +1,1238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vibe Terminal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@xterm/xterm@5.5.0/css/xterm.min.css">
+<script src="https://cdn.jsdelivr.net/npm/@xterm/xterm@5.5.0/lib/xterm.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@xterm/addon-fit@0.10.0/lib/addon-fit.min.js"></script>
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --void: #000000;
+  --surface: #0a0a0a;
+  --card: #141414;
+  --card-hover: #1c1c1c;
+  --border: #2a2a2a;
+  --border-glow: #00ff4120;
+  --green: #33ff00;
+  --green-dim: #2ad100;
+  --green-glow: #33ff0040;
+  --green-faint: #33ff0008;
+  --cyan: #00d4ff;
+  --amber: #f5bf4f;
+  --red: #ff5c57;
+  --text: #f2f2f2;
+  --text-dim: #808080;
+  --text-faint: #3a3a3a;
+  --panel-bg: #0a0c10;
+  --mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+}
+
+html { font-size: 13px; }
+
+body {
+  font-family: var(--mono);
+  background: var(--void);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+  position: relative;
+}
+
+/* ── CRT scanline overlay ── */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.08) 2px,
+    rgba(0, 0, 0, 0.08) 4px
+  );
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* ── Ambient glow ── */
+body::before {
+  content: '';
+  position: fixed;
+  top: -200px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 800px;
+  height: 400px;
+  background: radial-gradient(ellipse, var(--green-glow) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.25;
+}
+
+/* ── HEADER ── */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 28px;
+  border-bottom: 1px solid var(--border);
+  position: relative;
+  z-index: 10;
+  background: var(--void);
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.logo {
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--green);
+  text-shadow: 0 0 20px var(--green-glow), 0 0 40px rgba(0,255,65,0.15);
+  text-transform: uppercase;
+}
+
+.cursor-blink {
+  display: inline-block;
+  width: 8px;
+  height: 16px;
+  background: var(--green);
+  animation: blink 1s step-end infinite;
+  box-shadow: 0 0 8px var(--green-glow);
+  vertical-align: middle;
+  margin-left: 2px;
+}
+
+@keyframes blink {
+  50% { opacity: 0; }
+}
+
+.header-meta {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  letter-spacing: 0.04em;
+}
+
+.header-meta span {
+  color: var(--green-dim);
+}
+
+.btn-new-agent {
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--void);
+  background: var(--green);
+  border: none;
+  padding: 7px 16px;
+  cursor: pointer;
+  letter-spacing: 0.04em;
+  transition: all 0.15s;
+  position: relative;
+  clip-path: polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 6px 100%, 0 calc(100% - 6px));
+}
+
+.btn-new-agent:hover {
+  background: #66ff33;
+  box-shadow: 0 0 20px var(--green-glow), 0 0 40px rgba(51,255,0,0.1);
+}
+
+/* ── KANBAN BOARD ── */
+.board {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 2px;
+  padding: 2px;
+  min-height: calc(100vh - 53px);
+  position: relative;
+  z-index: 1;
+}
+
+.column {
+  background: var(--surface);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.column-header {
+  padding: 14px 16px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.column-title {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-dim);
+}
+
+.column-count {
+  font-size: 0.65rem;
+  color: var(--text-faint);
+  background: var(--card);
+  padding: 2px 7px;
+  border: 1px solid var(--border);
+}
+
+.column-body {
+  flex: 1;
+  padding: 8px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.column-body.drag-over {
+  background: var(--green-faint);
+  outline: 1px dashed var(--green-dim);
+  outline-offset: -4px;
+}
+
+/* scrollbar */
+.column-body::-webkit-scrollbar { width: 4px; }
+.column-body::-webkit-scrollbar-track { background: transparent; }
+.column-body::-webkit-scrollbar-thumb { background: var(--border); }
+
+/* ── CARDS ── */
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  padding: 12px 14px;
+  cursor: grab;
+  transition: all 0.15s;
+  position: relative;
+  user-select: none;
+}
+
+.card:hover {
+  background: var(--card-hover);
+  border-color: #3a3a3a;
+}
+
+.card:active { cursor: grabbing; }
+
+.card.dragging {
+  opacity: 0.4;
+  border-color: var(--green-dim);
+}
+
+.card-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.status-dot.running {
+  background: var(--green);
+  box-shadow: 0 0 6px var(--green-glow);
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+
+.status-dot.paused {
+  background: var(--amber);
+  box-shadow: 0 0 6px rgba(255,191,0,0.3);
+}
+
+.status-dot.idle {
+  background: var(--text-dim);
+}
+
+.status-dot.done {
+  background: var(--green-dim);
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; box-shadow: 0 0 6px var(--green-glow); }
+  50% { opacity: 0.5; box-shadow: 0 0 12px var(--green-glow); }
+}
+
+.card-title {
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--text);
+  line-height: 1.3;
+}
+
+.card-preview {
+  font-size: 0.7rem;
+  color: var(--text-dim);
+  line-height: 1.45;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  margin-top: 2px;
+}
+
+.card-preview .prompt-char {
+  color: var(--green-dim);
+}
+
+.card-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  font-size: 0.65rem;
+  color: var(--text-faint);
+}
+
+.card-tag {
+  padding: 1px 6px;
+  border: 1px solid var(--border);
+  letter-spacing: 0.04em;
+}
+
+/* In Progress column — loading bar */
+.column[data-col="active"] .card {
+  border-left: 2px solid var(--green-dim);
+  overflow: hidden;
+}
+
+.column[data-col="active"] .card::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 2px;
+  width: 40%;
+  background: linear-gradient(90deg, transparent, var(--green), transparent);
+  animation: progress-slide 1.8s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes progress-slide {
+  0% { left: -40%; }
+  100% { left: 100%; }
+}
+
+/* Review column — amber pulse */
+.column[data-col="review"] .card {
+  border-left: 2px solid var(--amber);
+}
+
+.column[data-col="review"] .card::after {
+  content: 'needs review';
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  font-size: 0.55rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--amber);
+  animation: review-blink 2s ease-in-out infinite;
+}
+
+@keyframes review-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+/* ── SIDE PANEL ── */
+.panel-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  z-index: 100;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: all 0.25s;
+}
+
+.panel-overlay.open {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+.side-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 48%;
+  min-width: 500px;
+  height: 100vh;
+  background: var(--panel-bg);
+  border-left: 1px solid #1a1c24;
+  z-index: 101;
+  transform: translateX(100%);
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  flex-direction: column;
+  box-shadow: -20px 0 60px rgba(0,0,0,0.5);
+}
+
+.side-panel.open {
+  transform: translateX(0);
+}
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  border-bottom: 1px solid #1a1c24;
+  flex-shrink: 0;
+  background: #06080c;
+}
+
+.panel-header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.panel-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--green);
+}
+
+.panel-session {
+  font-size: 0.65rem;
+  color: #505868;
+  padding: 2px 8px;
+  border: 1px solid #1a1c24;
+}
+
+.btn-close {
+  font-family: var(--mono);
+  background: none;
+  border: 1px solid #1a1c24;
+  color: #505868;
+  font-size: 0.75rem;
+  padding: 4px 10px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.btn-close:hover {
+  border-color: var(--red);
+  color: var(--red);
+}
+
+.panel-terminal {
+  flex: 1;
+  overflow: hidden;
+  padding: 8px;
+}
+
+.panel-terminal::-webkit-scrollbar { width: 4px; }
+.panel-terminal::-webkit-scrollbar-track { background: transparent; }
+.panel-terminal::-webkit-scrollbar-thumb { background: #1a1c24; }
+
+.panel-footer {
+  border-top: 1px solid #1a1c24;
+  flex-shrink: 0;
+  background: #06080c;
+}
+
+.panel-mode-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 20px;
+  font-size: 0.65rem;
+  color: #404858;
+  letter-spacing: 0.06em;
+  font-variant: small-caps;
+  border-top: 1px solid #1a1c24;
+}
+
+.panel-mode-bar .mode-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.panel-mode-bar .mode-dot.plan { background: var(--amber); box-shadow: 0 0 4px rgba(255,191,0,0.3); }
+.panel-mode-bar .mode-dot.code { background: var(--cyan); box-shadow: 0 0 4px rgba(0,229,255,0.3); }
+.panel-mode-bar .mode-dot.auto { background: var(--green-dim); box-shadow: 0 0 4px var(--green-glow); }
+
+/* ── MODAL ── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: all 0.2s;
+}
+
+.modal-overlay.open {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+.modal {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  width: 400px;
+  padding: 24px;
+  position: relative;
+}
+
+.modal-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--green);
+  margin-bottom: 4px;
+}
+
+.modal-subtitle {
+  font-size: 0.7rem;
+  color: var(--text-dim);
+  margin-bottom: 20px;
+}
+
+.modal label {
+  display: block;
+  font-size: 0.7rem;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 6px;
+}
+
+.modal input,
+.modal select {
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  width: 100%;
+  padding: 8px 12px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  color: var(--text);
+  outline: none;
+  margin-bottom: 16px;
+  transition: border-color 0.15s;
+}
+
+.modal input:focus,
+.modal select:focus {
+  border-color: var(--green-dim);
+}
+
+.modal input::placeholder {
+  color: var(--text-faint);
+}
+
+.modal-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 4px;
+}
+
+.modal-actions button {
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  padding: 7px 16px;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  transition: all 0.15s;
+}
+
+.btn-cancel {
+  background: transparent;
+  color: var(--text-dim);
+}
+
+.btn-cancel:hover {
+  border-color: var(--text-dim);
+  color: var(--text);
+}
+
+.btn-create {
+  background: var(--green);
+  color: var(--void);
+  border-color: var(--green);
+  font-weight: 600;
+}
+
+.btn-create:hover {
+  background: #66ff33;
+}
+
+/* ── Autocomplete dropdown ── */
+.autocomplete-list {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 100%;
+  background: var(--card);
+  border: 1px solid var(--border);
+  max-height: 160px;
+  overflow-y: auto;
+  z-index: 10;
+  display: none;
+}
+
+.autocomplete-list.visible { display: block; }
+
+.autocomplete-item {
+  padding: 6px 12px;
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  cursor: pointer;
+}
+
+.autocomplete-item:hover,
+.autocomplete-item.selected {
+  background: var(--card-hover);
+  color: var(--text);
+}
+
+.path-input-wrapper {
+  position: relative;
+}
+
+.dir-input-row {
+  display: flex;
+  gap: 6px;
+  align-items: stretch;
+}
+
+.dir-input-row input {
+  flex: 1;
+  margin-bottom: 0;
+}
+
+.dir-input-row .path-input-wrapper {
+  flex: 1;
+}
+
+.dir-input-row .path-input-wrapper input {
+  margin-bottom: 0;
+}
+
+.browse-btn {
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  padding: 0 12px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.browse-btn:hover {
+  border-color: var(--green-dim);
+  color: var(--text);
+}
+
+.btn-skip {
+  background: transparent;
+  color: var(--text-faint);
+  border: 1px solid transparent;
+}
+
+.btn-skip:hover {
+  color: var(--text-dim);
+  border-color: var(--border);
+}
+
+/* ── Responsive ── */
+@media (max-width: 900px) {
+  .board { grid-template-columns: repeat(2, 1fr); }
+  .side-panel { width: 80%; min-width: unset; }
+}
+</style>
+</head>
+<body>
+
+<!-- ── HEADER ── -->
+<header class="header">
+  <div class="header-left">
+    <span class="logo">vibe terminal</span>
+    <span class="cursor-blink"></span>
+    <span class="header-meta">
+      <span>0</span> agents &middot; <span>0</span> in progress
+    </span>
+  </div>
+  <button class="btn-new-agent" onclick="openModal()">+ New Agent</button>
+</header>
+
+<!-- ── KANBAN BOARD ── -->
+<div class="board" id="board">
+  <!-- Columns are rendered by JS -->
+</div>
+
+<!-- ── SIDE PANEL ── -->
+<div class="panel-overlay" id="panelOverlay" onclick="closePanel()"></div>
+<div class="side-panel" id="sidePanel">
+  <div class="panel-header">
+    <div class="panel-header-left">
+      <span class="panel-title" id="panelTitle">Agent</span>
+      <span class="panel-session" id="panelSession">session-xxx</span>
+    </div>
+    <div>
+      <button class="btn-close" onclick="killCurrentSession()" style="margin-right:4px">Kill</button>
+      <button class="btn-close" onclick="closePanel()">ESC ×</button>
+    </div>
+  </div>
+  <div class="panel-terminal" id="panelTerminal"></div>
+  <div class="panel-footer" id="panelFooter">
+    <div class="panel-mode-bar" id="panelModeBar">
+      <div class="mode-dot" id="panelModeDot"></div>
+      <span id="panelModeText">active</span>
+    </div>
+  </div>
+</div>
+
+<!-- Create Task Modal -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-title">new task</div>
+    <div class="modal-subtitle">Add to backlog</div>
+    <label for="agentName">task name</label>
+    <input type="text" id="agentName" placeholder="e.g. Refactor auth module" autofocus>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn-create" onclick="createAgent()">Create</button>
+    </div>
+  </div>
+</div>
+
+<!-- Start Session Modal -->
+<div class="modal-overlay" id="startSessionOverlay">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-title">start session</div>
+    <div class="modal-subtitle" id="startSessionSubtitle">Open terminal for: Task Name</div>
+    <label for="sessionPath">directory</label>
+    <div class="dir-input-row">
+      <div class="path-input-wrapper">
+        <input type="text" id="sessionPath" placeholder="~/Projects/my-app" autocomplete="off">
+        <div class="autocomplete-list" id="autocompleteList"></div>
+      </div>
+      <button class="browse-btn" onclick="toggleBrowser()">Browse</button>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeStartSessionModal()">Cancel</button>
+      <button class="btn-skip" onclick="skipStartSession()">Skip</button>
+      <button class="btn-create" onclick="startSession()">Start</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── CONFIG ──
+const API = '';
+const WS_URL = `ws://${location.host}/ws`;
+
+// ── STATE ──
+const columns = [
+  { id: 'backlog', label: 'Backlog' },
+  { id: 'active',  label: 'In Progress' },
+  { id: 'review',  label: 'Review' },
+  { id: 'done',    label: 'Done' },
+];
+
+let backlogTasks = JSON.parse(localStorage.getItem('vt-backlog') || '[]');
+let liveSessions = [];
+let activeTerminal = null;
+let currentPanelSession = null;
+let nextBacklogId = backlogTasks.length + 1;
+let startSessionCardId = null;
+
+// ── API ──
+async function fetchSessions() {
+  try {
+    const res = await fetch(`${API}/api/sessions`);
+    liveSessions = await res.json();
+  } catch { liveSessions = []; }
+}
+
+async function createSessionAPI(name, cwd) {
+  const res = await fetch(`${API}/api/sessions`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name, cwd }),
+  });
+  return res.json();
+}
+
+async function deleteSessionAPI(id) {
+  await fetch(`${API}/api/sessions/${id}`, { method: 'DELETE' });
+}
+
+async function fetchAutocomplete(path) {
+  const res = await fetch(`${API}/api/autocomplete?path=${encodeURIComponent(path)}`);
+  return res.json();
+}
+
+// ── RENDER ──
+function getAllCards() {
+  const cards = [];
+  backlogTasks.forEach(t => {
+    cards.push({
+      id: t.id, title: t.name, col: 'backlog', status: 'idle',
+      tag: t.tag || 'task', preview: 'No session started',
+      session: '—', isBacklog: true,
+    });
+  });
+  liveSessions.forEach(s => {
+    let col = 'active';
+    let statusClass = 'running';
+    if (s.status === 'review') { col = 'review'; statusClass = 'paused'; }
+    if (s.status === 'done') { col = 'done'; statusClass = 'done'; }
+    if (s._manualCol) { col = s._manualCol; }
+    cards.push({
+      id: s.id, title: s.name, col, status: statusClass,
+      tag: 'session', preview: s.cwd, session: s.id,
+      isBacklog: false, sessionData: s,
+    });
+  });
+  return cards;
+}
+
+function render() {
+  const board = document.getElementById('board');
+  board.innerHTML = '';
+  const cards = getAllCards();
+
+  columns.forEach(col => {
+    const colCards = cards.filter(c => c.col === col.id);
+    const colEl = document.createElement('div');
+    colEl.className = 'column';
+    colEl.dataset.col = col.id;
+
+    colEl.innerHTML = `
+      <div class="column-header">
+        <span class="column-title">${col.label}</span>
+        <span class="column-count">${colCards.length}</span>
+      </div>
+      <div class="column-body" data-col="${col.id}"></div>
+    `;
+
+    const body = colEl.querySelector('.column-body');
+
+    body.addEventListener('dragover', e => { e.preventDefault(); body.classList.add('drag-over'); });
+    body.addEventListener('dragleave', () => { body.classList.remove('drag-over'); });
+    body.addEventListener('drop', e => {
+      e.preventDefault();
+      body.classList.remove('drag-over');
+      const cardId = e.dataTransfer.getData('text/plain');
+      handleDrop(cardId, col.id);
+    });
+
+    colCards.forEach(card => {
+      const cardEl = document.createElement('div');
+      cardEl.className = 'card';
+      cardEl.draggable = true;
+      cardEl.dataset.id = card.id;
+
+      cardEl.innerHTML = `
+        <div class="card-top">
+          <div class="status-dot ${card.status}"></div>
+          <div class="card-title">${escapeHtml(card.title)}</div>
+        </div>
+        <div class="card-preview"><span class="prompt-char">${escapeHtml(card.preview)}</span></div>
+        <div class="card-meta">
+          <span class="card-tag">${card.tag}</span>
+          <span>${card.session}</span>
+        </div>
+      `;
+
+      cardEl.addEventListener('dragstart', e => {
+        e.dataTransfer.setData('text/plain', card.id);
+        cardEl.classList.add('dragging');
+        setTimeout(() => cardEl.style.opacity = '0.4', 0);
+      });
+      cardEl.addEventListener('dragend', () => {
+        cardEl.classList.remove('dragging');
+        cardEl.style.opacity = '';
+      });
+
+      cardEl.addEventListener('click', e => {
+        if (e.defaultPrevented) return;
+        if (card.isBacklog) {
+          openStartSessionModal(card);
+        } else {
+          openPanel(card);
+        }
+      });
+
+      body.appendChild(cardEl);
+    });
+
+    board.appendChild(colEl);
+  });
+
+  updateHeaderCounts();
+}
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+function updateHeaderCounts() {
+  const total = backlogTasks.length + liveSessions.length;
+  const active = liveSessions.filter(s => s.status === 'active').length;
+  document.querySelector('.header-meta').innerHTML =
+    `<span>${total}</span> agents &middot; <span>${active}</span> in progress`;
+}
+
+function handleDrop(cardId, targetCol) {
+  const session = liveSessions.find(s => s.id === cardId);
+  if (session) {
+    session._manualCol = targetCol;
+    if (targetCol === 'done') session.status = 'done';
+  }
+  render();
+}
+
+// ── SIDE PANEL (xterm.js) ──
+function openPanel(card) {
+  const panel = document.getElementById('sidePanel');
+  const overlay = document.getElementById('panelOverlay');
+  const title = document.getElementById('panelTitle');
+  const sessionEl = document.getElementById('panelSession');
+  const terminalEl = document.getElementById('panelTerminal');
+
+  if (activeTerminal) {
+    activeTerminal.term.dispose();
+    if (activeTerminal.ws) activeTerminal.ws.close();
+    activeTerminal = null;
+  }
+
+  title.textContent = card.title;
+  sessionEl.textContent = card.session;
+  currentPanelSession = card.sessionData;
+
+  const state = card.sessionData?.status || 'active';
+  updateModeIndicator(state);
+
+  terminalEl.innerHTML = '';
+  const term = new Terminal({
+    fontFamily: "'SF Mono', 'Menlo', 'Monaco', monospace",
+    fontSize: 13,
+    theme: {
+      background: '#0a0c10',
+      foreground: '#f0f0f0',
+      cursor: '#33ff00',
+      cursorAccent: '#0a0c10',
+      selectionBackground: '#1a2030',
+      black: '#0a0c10',
+      red: '#ff5c57',
+      green: '#33ff00',
+      yellow: '#f5bf4f',
+      blue: '#00d4ff',
+      magenta: '#c792ea',
+      cyan: '#00d4ff',
+      white: '#e0e4ef',
+      brightBlack: '#505868',
+      brightRed: '#ff5c57',
+      brightGreen: '#33ff00',
+      brightYellow: '#f5bf4f',
+      brightBlue: '#00d4ff',
+      brightMagenta: '#c792ea',
+      brightCyan: '#00d4ff',
+      brightWhite: '#f2f2f2',
+    },
+    cursorBlink: true,
+    scrollback: 10000,
+    allowProposedApi: true,
+  });
+
+  const fitAddon = new FitAddon.FitAddon();
+  term.loadAddon(fitAddon);
+  term.open(terminalEl);
+  setTimeout(() => fitAddon.fit(), 50);
+
+  const ws = new WebSocket(`${WS_URL}?sessionId=${card.session}`);
+
+  ws.onmessage = (event) => {
+    const msg = JSON.parse(event.data);
+    if (msg.type === 'output') {
+      term.write(msg.data);
+    } else if (msg.type === 'scrollback') {
+      term.write(msg.data);
+    } else if (msg.type === 'state') {
+      updateModeIndicator(msg.state);
+      const sess = liveSessions.find(s => s.id === card.session);
+      if (sess) {
+        sess.status = msg.state;
+        delete sess._manualCol;
+        render();
+      }
+    } else if (msg.type === 'exit') {
+      term.write('\r\n\x1b[2m[Process exited]\x1b[0m\r\n');
+    }
+  };
+
+  term.onData((data) => {
+    if (ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({ type: 'input', data }));
+    }
+  });
+
+  term.onResize(({ cols, rows }) => {
+    if (ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({ type: 'resize', cols, rows }));
+    }
+  });
+
+  const resizeHandler = () => fitAddon.fit();
+  window.addEventListener('resize', resizeHandler);
+
+  activeTerminal = { term, ws, sessionId: card.session, fitAddon, resizeHandler };
+
+  panel.classList.add('open');
+  overlay.classList.add('open');
+  term.focus();
+
+  document.addEventListener('keydown', handleEsc);
+}
+
+function updateModeIndicator(state) {
+  const modeDot = document.getElementById('panelModeDot');
+  const modeText = document.getElementById('panelModeText');
+  if (state === 'active') {
+    modeDot.className = 'mode-dot code';
+    modeText.textContent = '\u26A1 in progress';
+  } else if (state === 'review') {
+    modeDot.className = 'mode-dot plan';
+    modeText.textContent = '\u26A1 waiting for input';
+  } else {
+    modeDot.className = 'mode-dot auto';
+    modeText.textContent = '\u26A1 session ended';
+  }
+}
+
+function closePanel() {
+  document.getElementById('sidePanel').classList.remove('open');
+  document.getElementById('panelOverlay').classList.remove('open');
+  document.removeEventListener('keydown', handleEsc);
+  if (activeTerminal) {
+    if (activeTerminal.ws) activeTerminal.ws.close();
+    activeTerminal.term.dispose();
+    window.removeEventListener('resize', activeTerminal.resizeHandler);
+    activeTerminal = null;
+  }
+}
+
+function handleEsc(e) {
+  if (e.key === 'Escape') closePanel();
+}
+
+async function killCurrentSession() {
+  if (!currentPanelSession) return;
+  await deleteSessionAPI(currentPanelSession.id);
+  closePanel();
+  await fetchSessions();
+  render();
+}
+
+// ── BACKLOG MODAL ──
+function openModal() {
+  document.getElementById('modalOverlay').classList.add('open');
+  document.getElementById('agentName').value = '';
+  setTimeout(() => document.getElementById('agentName').focus(), 100);
+  document.getElementById('agentName').onkeydown = e => {
+    if (e.key === 'Enter') createAgent();
+    if (e.key === 'Escape') closeModal();
+  };
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('open');
+}
+
+document.getElementById('modalOverlay').addEventListener('click', closeModal);
+
+function createAgent() {
+  const name = document.getElementById('agentName').value.trim();
+  if (!name) return;
+  backlogTasks.push({ id: 'task-' + nextBacklogId++, name, tag: 'task' });
+  localStorage.setItem('vt-backlog', JSON.stringify(backlogTasks));
+  closeModal();
+  render();
+}
+
+// ── START SESSION MODAL ──
+function openStartSessionModal(card) {
+  startSessionCardId = card.id;
+  document.getElementById('startSessionSubtitle').textContent = `Open terminal for: ${card.title}`;
+  document.getElementById('sessionPath').value = '~/';
+  document.getElementById('startSessionOverlay').classList.add('open');
+  setTimeout(() => document.getElementById('sessionPath').focus(), 100);
+
+  const input = document.getElementById('sessionPath');
+  let debounceTimer;
+  input.oninput = () => {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(async () => {
+      const suggestions = await fetchAutocomplete(input.value);
+      renderAutocomplete(suggestions);
+    }, 200);
+  };
+
+  input.onkeydown = e => {
+    if (e.key === 'Enter') {
+      const list = document.getElementById('autocompleteList');
+      if (list.classList.contains('visible')) {
+        const selected = list.querySelector('.selected');
+        if (selected) {
+          input.value = selected.dataset.path + '/';
+          list.classList.remove('visible');
+          return;
+        }
+      }
+      startSession();
+    }
+    if (e.key === 'Escape') {
+      const list = document.getElementById('autocompleteList');
+      if (list.classList.contains('visible')) { list.classList.remove('visible'); return; }
+      closeStartSessionModal();
+    }
+    if (e.key === 'Tab') {
+      e.preventDefault();
+      const items = document.getElementById('autocompleteList').querySelectorAll('.autocomplete-item');
+      if (items.length === 1) {
+        input.value = items[0].dataset.path + '/';
+        document.getElementById('autocompleteList').classList.remove('visible');
+        input.dispatchEvent(new Event('input'));
+      }
+    }
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      navigateAutocomplete(e.key === 'ArrowDown' ? 1 : -1);
+    }
+  };
+}
+
+function closeStartSessionModal() {
+  document.getElementById('startSessionOverlay').classList.remove('open');
+  document.getElementById('autocompleteList').classList.remove('visible');
+  startSessionCardId = null;
+}
+
+document.getElementById('startSessionOverlay').addEventListener('click', closeStartSessionModal);
+
+function renderAutocomplete(suggestions) {
+  const list = document.getElementById('autocompleteList');
+  if (suggestions.length === 0) { list.classList.remove('visible'); return; }
+  list.innerHTML = suggestions.map(s =>
+    `<div class="autocomplete-item" data-path="${escapeHtml(s)}" onclick="selectAutocomplete(this)">${escapeHtml(s)}</div>`
+  ).join('');
+  list.classList.add('visible');
+}
+
+function selectAutocomplete(el) {
+  const input = document.getElementById('sessionPath');
+  input.value = el.dataset.path + '/';
+  document.getElementById('autocompleteList').classList.remove('visible');
+  input.focus();
+  input.dispatchEvent(new Event('input'));
+}
+
+function navigateAutocomplete(dir) {
+  const list = document.getElementById('autocompleteList');
+  const items = Array.from(list.querySelectorAll('.autocomplete-item'));
+  if (items.length === 0) return;
+  const current = list.querySelector('.selected');
+  let idx = current ? items.indexOf(current) : -1;
+  if (current) current.classList.remove('selected');
+  idx = (idx + dir + items.length) % items.length;
+  items[idx].classList.add('selected');
+}
+
+// ── SKIP (open at ~/) ──
+async function skipStartSession() {
+  const task = backlogTasks.find(t => t.id === startSessionCardId);
+  if (!task) return;
+
+  const session = await createSessionAPI(task.name, '~/');
+
+  backlogTasks = backlogTasks.filter(t => t.id !== startSessionCardId);
+  localStorage.setItem('vt-backlog', JSON.stringify(backlogTasks));
+
+  closeStartSessionModal();
+  await fetchSessions();
+  render();
+
+  const card = getAllCards().find(c => c.session === session.id);
+  if (card) openPanel(card);
+}
+
+// ── NATIVE DIRECTORY PICKER ──
+async function toggleBrowser() {
+  const res = await fetch(`${API}/api/browse`);
+  const { path } = await res.json();
+  if (path) {
+    document.getElementById('sessionPath').value = path;
+  }
+}
+
+async function startSession() {
+  const pathInput = document.getElementById('sessionPath');
+  const task = backlogTasks.find(t => t.id === startSessionCardId);
+  if (!task) return;
+
+  const session = await createSessionAPI(task.name, pathInput.value.trim());
+
+  backlogTasks = backlogTasks.filter(t => t.id !== startSessionCardId);
+  localStorage.setItem('vt-backlog', JSON.stringify(backlogTasks));
+
+  closeStartSessionModal();
+  await fetchSessions();
+  render();
+
+  const card = getAllCards().find(c => c.session === session.id);
+  if (card) openPanel(card);
+}
+
+// ── POLLING ──
+setInterval(async () => {
+  await fetchSessions();
+  render();
+}, 10000);
+
+// ── INIT ──
+(async () => {
+  await fetchSessions();
+  render();
+  closePanel();
+  closeModal();
+})();
+</script>
+</body>
+</html>
