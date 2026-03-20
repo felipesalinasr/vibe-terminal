@@ -2,10 +2,10 @@ import express from 'express';
 import { createServer } from 'http';
 import { WebSocketServer } from 'ws';
 import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
+import { dirname, join, resolve } from 'path';
 import { spawn, execFileSync } from 'child_process';
 import { existsSync, statSync, mkdirSync, writeFileSync, renameSync } from 'fs';
-import { tmpdir } from 'os';
+import { homedir, tmpdir } from 'os';
 import multer from 'multer';
 import { createSession, getSession, listSessions, killSession, writeToSession, resizeSession, addListener, removeListener, loadHistoricalSessions } from './sessions.js';
 import { removeSessionFromMetadata } from './session-store.js';
@@ -15,6 +15,12 @@ import { ensureAgentDir, createAgentConfig, getAgentConfig, saveAgentConfig, add
 import { listTemplates, getTemplate, createTemplate, updateTemplate, deleteTemplate } from './templates.js';
 import { CONNECTOR_CATALOG, resolveConnectorPermissions, setCatalog, parseMcpTools } from './connectors.js';
 import { readFile, writeFile, readdir, mkdir } from 'fs/promises';
+import { assertPathWithin, sanitizePathParam, ALLOWED_KB_TYPES, MAX_DROP_FILE_SIZE, MAX_KB_FILE_SIZE } from './security.js';
+import { badRequest, notFound, forbidden, unprocessable } from './errors.js';
+import { errorHandler } from './middleware/error-handler.js';
+import { asyncHandler } from './middleware/async-handler.js';
+import { validate } from './middleware/validate.js';
+import { createSessionSchema, updateAgentSchema, purposeSchema, agentsMdSchema, skillContentWriteSchema, createTemplateSchema, updateTemplateSchema, openSchema, fileTrackSchema, connectorSyncSchema } from './schemas.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -198,11 +204,9 @@ app.get('/api/sessions', (req, res) => {
   res.json(listSessions());
 });
 
-app.post('/api/sessions', async (req, res) => {
+app.post('/api/sessions', validate(createSessionSchema), asyncHandler(async (req, res) => {
   const { name, cwd, templateId } = req.body;
-  if (!name) return res.status(400).json({ error: 'name is required' });
-  try {
-    const session = createSession({ name, cwd });
+  const session = createSession({ name, cwd });
 
     // Auto-create agent config on disk
     await ensureAgentDir(session.id);
@@ -321,15 +325,12 @@ app.post('/api/sessions', async (req, res) => {
       detector.processOutput(data);
     });
 
-    res.json(session);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
+    res.status(201).json(session);
+}));
 
 app.get('/api/sessions/:id', (req, res) => {
   const session = getSession(req.params.id);
-  if (!session) return res.status(404).json({ error: 'session not found' });
+  if (!session) throw notFound('session not found');
   res.json({
     id: session.id,
     name: session.name,
@@ -343,7 +344,7 @@ app.get('/api/sessions/:id', (req, res) => {
 
 app.delete('/api/sessions/:id', (req, res) => {
   const session = getSession(req.params.id);
-  if (!session) return res.status(404).json({ error: 'session not found' });
+  if (!session) throw notFound('session not found');
   if (session._detector) session._detector.destroy();
   // Historical sessions have no pty — just remove from map and disk
   if (session.status === 'historical') {
@@ -367,7 +368,7 @@ app.get('/api/autocomplete', async (req, res) => {
 // ── File drop upload ──
 const dropDir = join(tmpdir(), 'vibe-terminal-drops');
 mkdirSync(dropDir, { recursive: true });
-const upload = multer({ dest: dropDir });
+const upload = multer({ dest: dropDir, limits: { fileSize: MAX_DROP_FILE_SIZE } });
 
 app.post('/api/drop', upload.single('file'), (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'no file' });
@@ -402,19 +403,16 @@ app.get('/api/browse', (req, res) => {
 });
 
 // ── Open file / Reveal in Finder ──
-app.post('/api/open', (req, res) => {
-  const { path, action } = req.body;
-  if (!path) return res.status(400).json({ error: 'path is required' });
-  try {
-    if (action === 'folder') {
-      spawn('open', ['-R', path]);
-    } else {
-      spawn('open', [path]);
-    }
-    res.json({ ok: true });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+app.post('/api/open', validate(openSchema), (req, res) => {
+  const { path: rawPath, action } = req.body;
+  const safePath = resolve(rawPath);
+  if (!existsSync(safePath)) throw notFound('path does not exist');
+  if (action === 'folder') {
+    spawn('open', ['-R', safePath]);
+  } else {
+    spawn('open', [safePath]);
   }
+  res.json({ ok: true });
 });
 
 // ── Agent Config API ──
@@ -434,11 +432,11 @@ app.get('/api/agents/:id', async (req, res) => {
   res.json({ config, purpose });
 });
 
-app.put('/api/agents/:id', async (req, res) => {
+app.put('/api/agents/:id', validate(updateAgentSchema), asyncHandler(async (req, res) => {
   const updated = await saveAgentConfig(req.params.id, req.body);
-  if (!updated) return res.status(404).json({ error: 'agent not found' });
+  if (!updated) throw notFound('agent not found');
   res.json(updated);
-});
+}));
 
 app.get('/api/agents/:id/purpose', async (req, res) => {
   const session = getSession(req.params.id);
@@ -447,13 +445,13 @@ app.get('/api/agents/:id/purpose', async (req, res) => {
   res.json({ content });
 });
 
-app.put('/api/agents/:id/purpose', async (req, res) => {
+app.put('/api/agents/:id/purpose', validate(purposeSchema), asyncHandler(async (req, res) => {
   const session = getSession(req.params.id);
-  if (!session?.cwd) return res.status(404).json({ error: 'session not found' });
+  if (!session?.cwd) throw notFound('session not found');
   const { content } = req.body;
   await writeClaudeMd(session.cwd, content || '');
   res.json({ ok: true });
-});
+}));
 
 // ── Skills (read from {cwd}/.claude/skills/) ──
 
@@ -488,22 +486,25 @@ app.get('/api/agents/:id/skills', async (req, res) => {
   }
 });
 
-app.get('/api/agents/:id/skills/:folder', async (req, res) => {
+app.get('/api/agents/:id/skills/:folder', asyncHandler(async (req, res) => {
   const session = getSession(req.params.id);
-  if (!session?.cwd) return res.status(404).json({ error: 'session not found' });
-  const skillPath = join(session.cwd, '.claude', 'skills', req.params.folder, 'SKILL.md');
-  try {
-    const content = await readFile(skillPath, 'utf8');
-    res.json({ content });
-  } catch {
-    res.status(404).json({ error: 'skill not found' });
-  }
-});
+  if (!session?.cwd) throw notFound('session not found');
+  const folder = sanitizePathParam(req.params.folder);
+  if (!folder || folder.includes('/')) throw badRequest('Invalid skill folder name');
+  const skillsBase = join(session.cwd, '.claude', 'skills');
+  const skillPath = assertPathWithin(join(skillsBase, folder, 'SKILL.md'), skillsBase);
+  const content = await readFile(skillPath, 'utf8').catch(() => null);
+  if (content === null) throw notFound('skill not found');
+  res.json({ content });
+}));
 
-app.put('/api/agents/:id/skills/:folder', async (req, res) => {
+app.put('/api/agents/:id/skills/:folder', asyncHandler(async (req, res) => {
   const session = getSession(req.params.id);
-  if (!session?.cwd) return res.status(404).json({ error: 'session not found' });
-  const skillDir = join(session.cwd, '.claude', 'skills', req.params.folder);
+  if (!session?.cwd) throw notFound('session not found');
+  const folder = sanitizePathParam(req.params.folder);
+  if (!folder || folder.includes('/')) throw badRequest('Invalid skill folder name');
+  const skillsBase = join(session.cwd, '.claude', 'skills');
+  const skillDir = assertPathWithin(join(skillsBase, folder), skillsBase);
   mkdirSync(skillDir, { recursive: true });
   const skillPath = join(skillDir, 'SKILL.md');
   await writeFile(skillPath, req.body.content || '');
@@ -531,21 +532,19 @@ app.put('/api/agents/:id/skills/:folder', async (req, res) => {
     await syncSkillsToCLAUDEmd(session.cwd, skills);
   } catch {}
   res.json({ ok: true });
-});
+}));
 
-app.post('/api/agents/:id/files', async (req, res) => {
+app.post('/api/agents/:id/files', validate(fileTrackSchema), asyncHandler(async (req, res) => {
   const { path } = req.body;
-  if (!path) return res.status(400).json({ error: 'path is required' });
   await addAgentFile(req.params.id, path);
-  res.json({ ok: true });
-});
+  res.status(201).json({ ok: true });
+}));
 
-app.delete('/api/agents/:id/files', async (req, res) => {
+app.delete('/api/agents/:id/files', validate(fileTrackSchema), asyncHandler(async (req, res) => {
   const { path } = req.body;
-  if (!path) return res.status(400).json({ error: 'path is required' });
   await removeAgentFile(req.params.id, path);
   res.json({ ok: true });
-});
+}));
 
 app.get('/api/agents/:id/knowledge', async (req, res) => {
   const files = await listAgentKnowledge(req.params.id);
@@ -560,28 +559,34 @@ const kbUpload = multer({
       cb(null, dir);
     },
     filename: (req, file, cb) => cb(null, file.originalname),
-  })
+  }),
+  limits: { fileSize: MAX_KB_FILE_SIZE },
+  fileFilter: (_req, file, cb) => {
+    if (!ALLOWED_KB_TYPES.has(file.mimetype)) {
+      cb(new Error(`Unsupported file type: ${file.mimetype}`));
+      return;
+    }
+    cb(null, true);
+  },
 });
 
-app.post('/api/agents/:id/knowledge', kbUpload.single('file'), async (req, res) => {
-  if (!req.file) return res.status(400).json({ error: 'no file' });
+app.post('/api/agents/:id/knowledge', kbUpload.single('file'), asyncHandler(async (req, res) => {
+  if (!req.file) throw badRequest('no file');
   // Audit trail
   const session = getSession(req.params.id);
   if (session?.cwd) await appendAuditEntry(session.cwd, { sessionId: req.params.id, event: 'knowledge_upload', detail: { filename: req.file.originalname } });
-  res.json({ name: req.file.originalname, size: req.file.size, path: req.file.path });
-});
+  res.status(201).json({ name: req.file.originalname, size: req.file.size, path: req.file.path });
+}));
 
-app.delete('/api/agents/:id/knowledge/:filename', async (req, res) => {
-  try {
-    await deleteAgentKnowledge(req.params.id, req.params.filename);
-    // Audit trail
-    const session = getSession(req.params.id);
-    if (session?.cwd) await appendAuditEntry(session.cwd, { sessionId: req.params.id, event: 'knowledge_delete', detail: { filename: req.params.filename } });
-    res.json({ ok: true });
-  } catch (err) {
-    res.status(404).json({ error: 'file not found' });
-  }
-});
+app.delete('/api/agents/:id/knowledge/:filename', asyncHandler(async (req, res) => {
+  const filename = sanitizePathParam(req.params.filename);
+  if (!filename || filename.includes('/')) throw badRequest('Invalid filename');
+  await deleteAgentKnowledge(req.params.id, filename);
+  // Audit trail
+  const session = getSession(req.params.id);
+  if (session?.cwd) await appendAuditEntry(session.cwd, { sessionId: req.params.id, event: 'knowledge_delete', detail: { filename } });
+  res.json({ ok: true });
+}));
 
 // ── Memory & Audit API ──
 
@@ -608,21 +613,26 @@ app.get('/api/agents/:id/agents-md', async (req, res) => {
   res.json({ content });
 });
 
-app.put('/api/agents/:id/agents-md', async (req, res) => {
+app.put('/api/agents/:id/agents-md', validate(agentsMdSchema), asyncHandler(async (req, res) => {
   const session = getSession(req.params.id);
-  if (!session?.cwd) return res.status(404).json({ error: 'session not found' });
+  if (!session?.cwd) throw notFound('session not found');
   const { content } = req.body;
   await writeAgentsMd(session.cwd, content || '');
   res.json({ ok: true });
-});
+}));
 
 // ── Import agent from directory ──
 
-app.get('/api/import-agent', async (req, res) => {
+app.get('/api/import-agent', asyncHandler(async (req, res) => {
   const dir = req.query.path;
-  if (!dir) return res.status(400).json({ error: 'path is required' });
+  if (!dir) throw badRequest('path is required');
 
-  const resolved = dir.replace(/^~/, process.env.HOME);
+  const resolved = resolve(dir.replace(/^~/, homedir()));
+  // Validate path is a directory within home
+  assertPathWithin(resolved, homedir());
+  if (!existsSync(resolved) || !statSync(resolved).isDirectory()) {
+    throw notFound('directory does not exist');
+  }
   const result = { name: '', purpose: '', skills: [], defaultCwd: resolved };
 
   // Derive name from directory basename
@@ -657,7 +667,7 @@ app.get('/api/import-agent', async (req, res) => {
   } catch {}
 
   res.json(result);
-});
+}));
 
 // ── Template API ──
 
@@ -665,29 +675,28 @@ app.get('/api/templates', async (req, res) => {
   res.json(await listTemplates());
 });
 
-app.post('/api/templates', async (req, res) => {
-  if (!req.body.name) return res.status(400).json({ error: 'name is required' });
+app.post('/api/templates', validate(createTemplateSchema), asyncHandler(async (req, res) => {
   const template = await createTemplate(req.body);
-  res.json(template);
-});
+  res.status(201).json(template);
+}));
 
-app.get('/api/templates/:id', async (req, res) => {
+app.get('/api/templates/:id', asyncHandler(async (req, res) => {
   const template = await getTemplate(req.params.id);
-  if (!template) return res.status(404).json({ error: 'template not found' });
+  if (!template) throw notFound('template not found');
   res.json(template);
-});
+}));
 
-app.put('/api/templates/:id', async (req, res) => {
+app.put('/api/templates/:id', validate(updateTemplateSchema), asyncHandler(async (req, res) => {
   const updated = await updateTemplate(req.params.id, req.body);
-  if (!updated) return res.status(404).json({ error: 'template not found' });
+  if (!updated) throw notFound('template not found');
   res.json(updated);
-});
+}));
 
-app.delete('/api/templates/:id', async (req, res) => {
+app.delete('/api/templates/:id', asyncHandler(async (req, res) => {
   const ok = await deleteTemplate(req.params.id);
-  if (!ok) return res.status(404).json({ error: 'template not found' });
+  if (!ok) throw notFound('template not found');
   res.json({ ok: true });
-});
+}));
 
 // ── Connectors catalog ──
 
@@ -695,21 +704,14 @@ app.get('/api/connectors/catalog', (req, res) => {
   res.json(CONNECTOR_CATALOG);
 });
 
-app.post('/api/connectors/sync', async (req, res) => {
+app.post('/api/connectors/sync', validate(connectorSyncSchema), asyncHandler(async (req, res) => {
   const { tools } = req.body;
-  if (!Array.isArray(tools) || !tools.length) {
-    return res.status(400).json({ error: 'tools array is required' });
-  }
-  try {
-    const catalog = parseMcpTools(tools);
-    setCatalog(catalog);
-    await writeFile(CATALOG_PATH, JSON.stringify(catalog, null, 2));
-    const actionCount = Object.values(catalog).reduce((sum, c) => sum + c.actions.length, 0);
-    res.json({ connectors: Object.keys(catalog).length, actions: actionCount, catalog });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
+  const catalog = parseMcpTools(tools);
+  setCatalog(catalog);
+  await writeFile(CATALOG_PATH, JSON.stringify(catalog, null, 2));
+  const actionCount = Object.values(catalog).reduce((sum, c) => sum + c.actions.length, 0);
+  res.json({ connectors: Object.keys(catalog).length, actions: actionCount, catalog });
+}));
 
 // ── Skills catalog endpoints ──
 
@@ -788,32 +790,40 @@ app.get('/api/skills/external', async (req, res) => {
   }
 });
 
-// GET /api/skill-content — Read a SKILL.md file by absolute path
-app.get('/api/skill-content', async (req, res) => {
+// GET /api/skill-content — Read a SKILL.md file by path (must be within home directory)
+app.get('/api/skill-content', asyncHandler(async (req, res) => {
   const filePath = req.query.path;
-  if (!filePath) return res.status(400).json({ error: 'path is required' });
-  try {
-    const content = await readFile(filePath, 'utf8');
-    res.json({ content });
-  } catch {
-    res.json({ content: '' });
+  if (!filePath) throw badRequest('path is required');
+  // Security: path must be within user's home directory and be a SKILL.md file
+  const safePath = assertPathWithin(resolve(filePath), homedir());
+  if (!safePath.endsWith('/SKILL.md') && !safePath.endsWith('\\SKILL.md')) {
+    throw forbidden('Only SKILL.md files can be read via this endpoint');
   }
+  const content = await readFile(safePath, 'utf8').catch(() => '');
+  res.json({ content });
+}));
+
+// PUT /api/skill-content — Write a SKILL.md file by path (must be within home directory)
+app.put('/api/skill-content', validate(skillContentWriteSchema), asyncHandler(async (req, res) => {
+  const { path: filePath, content } = req.body;
+  // Security: path must be within user's home directory and be a SKILL.md file
+  const safePath = assertPathWithin(resolve(filePath), homedir());
+  if (!safePath.endsWith('/SKILL.md') && !safePath.endsWith('\\SKILL.md')) {
+    throw forbidden('Only SKILL.md files can be written via this endpoint');
+  }
+  const dir = safePath.substring(0, safePath.lastIndexOf('/'));
+  mkdirSync(dir, { recursive: true });
+  await writeFile(safePath, content || '');
+  res.json({ ok: true });
+}));
+
+// 404 for unknown API routes
+app.use('/api', (req, res) => {
+  res.status(404).json({ error: 'API route not found' });
 });
 
-// PUT /api/skill-content — Write a SKILL.md file by absolute path
-app.put('/api/skill-content', async (req, res) => {
-  const { path: filePath, content } = req.body;
-  if (!filePath) return res.status(400).json({ error: 'path is required' });
-  try {
-    // Ensure directory exists
-    const dir = filePath.substring(0, filePath.lastIndexOf('/'));
-    mkdirSync(dir, { recursive: true });
-    await writeFile(filePath, content || '');
-    res.json({ ok: true });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
+// Centralized error handler (must be last middleware)
+app.use(errorHandler);
 
 // ── WebSocket ──
 
