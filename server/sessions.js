@@ -20,7 +20,18 @@ export function createSession({ name, cwd }) {
     cols: 120,
     rows: 30,
     cwd: resolvedCwd,
-    env: (() => { const e = { ...process.env, TERM: 'xterm-256color' }; delete e.CLAUDECODE; return e; })(),
+    env: (() => {
+      const e = { ...process.env, TERM: 'xterm-256color' };
+      delete e.CLAUDECODE;
+      // Ensure standard binary paths are available (codex, claude, etc.)
+      const standardPaths = ['/usr/local/bin', '/opt/homebrew/bin', '/usr/local/sbin'];
+      const existing = (e.PATH || '').split(':');
+      for (const p of standardPaths) {
+        if (!existing.includes(p)) existing.push(p);
+      }
+      e.PATH = existing.join(':');
+      return e;
+    })(),
   });
 
   const session = {
