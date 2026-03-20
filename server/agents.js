@@ -137,9 +137,26 @@ export async function ensureAuditDir(cwd) {
   }
 }
 
+const REDACTED_KEYS = new Set(['password', 'secret', 'token', 'apiKey', 'api_key', 'authorization', 'cookie']);
+
+function sanitizeRecord(obj) {
+  if (obj === null || typeof obj !== 'object') return obj;
+  if (Array.isArray(obj)) return obj.map(sanitizeRecord);
+  const cleaned = {};
+  for (const [key, value] of Object.entries(obj)) {
+    if (REDACTED_KEYS.has(key.toLowerCase())) {
+      cleaned[key] = '[REDACTED]';
+    } else {
+      cleaned[key] = sanitizeRecord(value);
+    }
+  }
+  return cleaned;
+}
+
 export async function appendAuditEntry(cwd, entry) {
   const auditFile = join(cwd, 'audit', 'audit.jsonl');
-  const line = JSON.stringify({ ts: new Date().toISOString(), ...entry }) + '\n';
+  const sanitized = sanitizeRecord(entry);
+  const line = JSON.stringify({ ts: new Date().toISOString(), ...sanitized }) + '\n';
   try {
     await appendFile(auditFile, line);
   } catch {
