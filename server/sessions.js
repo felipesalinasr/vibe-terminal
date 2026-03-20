@@ -1,12 +1,13 @@
 import pty from 'node-pty';
 import { randomBytes } from 'crypto';
 import os from 'os';
+import { loadSessionMetadata, saveSessionMetadata, createScrollbackStream, readScrollback } from './session-store.js';
 
 const sessions = new Map();
 const MAX_SCROLLBACK = 10000;
 
 function generateId() {
-  return 'sess-' + randomBytes(2).toString('hex');
+  return 'sess-' + randomBytes(4).toString('hex');
 }
 
 export function createSession({ name, cwd }) {
@@ -34,11 +35,17 @@ export function createSession({ name, cwd }) {
     createdAt: Date.now(),
   };
 
+  // Persistence: scrollback write stream
+  const scrollbackStream = createScrollbackStream(id);
+  session._scrollbackStream = scrollbackStream;
+
   ptyProcess.onData((data) => {
     session.scrollback.push(data);
     if (session.scrollback.length > MAX_SCROLLBACK) {
       session.scrollback = session.scrollback.slice(-MAX_SCROLLBACK);
     }
+    // Persist to disk
+    scrollbackStream.write(data);
     for (const listener of session.listeners) {
       listener({ type: 'output', data });
     }
@@ -46,12 +53,27 @@ export function createSession({ name, cwd }) {
 
   ptyProcess.onExit(({ exitCode }) => {
     session.status = 'done';
+    session.endedAt = Date.now();
+    // Close scrollback stream and persist metadata
+    scrollbackStream.end();
+    const meta = loadSessionMetadata();
+    const entry = meta.find(m => m.id === id);
+    if (entry) {
+      entry.endedAt = session.endedAt;
+      saveSessionMetadata(meta);
+    }
     for (const listener of session.listeners) {
       listener({ type: 'exit', exitCode });
     }
   });
 
   sessions.set(id, session);
+
+  // Persist session metadata to disk
+  const meta = loadSessionMetadata();
+  meta.push({ id, name, cwd: session.cwd, createdAt: session.createdAt, endedAt: null });
+  saveSessionMetadata(meta);
+
   return { id, name, cwd: session.cwd, status: session.status, pid: session.pid, createdAt: session.createdAt };
 }
 
@@ -90,6 +112,18 @@ export function killSession(id) {
   if (session.pty) {
     session.pty.kill();
   }
+  // Close scrollback stream
+  if (session._scrollbackStream) {
+    session._scrollbackStream.end();
+  }
+  // Update metadata with endedAt
+  session.endedAt = Date.now();
+  const meta = loadSessionMetadata();
+  const entry = meta.find(m => m.id === id);
+  if (entry) {
+    entry.endedAt = session.endedAt;
+    saveSessionMetadata(meta);
+  }
   sessions.delete(id);
   return true;
 }
@@ -112,4 +146,27 @@ export function updateSessionStatus(id, status) {
   if (!session) return false;
   session.status = status;
   return true;
+}
+
+export function loadHistoricalSessions() {
+  const meta = loadSessionMetadata();
+  let count = 0;
+  for (const entry of meta) {
+    if (sessions.has(entry.id)) continue;
+    const scrollbackData = readScrollback(entry.id);
+    sessions.set(entry.id, {
+      id: entry.id,
+      name: entry.name,
+      cwd: entry.cwd,
+      status: 'historical',
+      pid: null,
+      pty: null,
+      scrollback: scrollbackData ? [scrollbackData] : [],
+      listeners: new Set(),
+      createdAt: entry.createdAt,
+      endedAt: entry.endedAt,
+    });
+    count++;
+  }
+  return count;
 }

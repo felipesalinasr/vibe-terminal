@@ -7,3 +7,10 @@ node_modules/
 
 # Compiled binaries (built at runtime)
 server/browse-helper
+launcher/main
+
+# Runtime cache
+server/connectors-catalog.json
+
+# User-specific template data
+templates/tpl-*.json

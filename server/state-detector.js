@@ -1,9 +1,22 @@
 const IDLE_TIMEOUT_MS = 5000;
 
-export function createStateDetector(onStateChange) {
+export function createStateDetector(onStateChange, onFileDetected, onSkillsChanged) {
   let currentState = 'active';
   let idleTimer = null;
+  let skillTimer = null;
   let buffer = '';
+
+  const filePatterns = [
+    /● (?:Write|Edit)\(([^)]+)\)/,
+    /Created (?:file )?(?:at: )?(.+)$/m,
+  ];
+
+  const skillCommandPatterns = [
+    /npx skills add/,
+    /skills add .+--skill/,
+    /Added skill/i,
+    /Skill .+ installed/i,
+  ];
 
   const reviewPatterns = [
     /❯\s*$/m,
@@ -43,6 +56,25 @@ export function createStateDetector(onStateChange) {
       buffer = buffer.slice(-2000);
     }
 
+    if (onFileDetected) {
+      for (const pattern of filePatterns) {
+        const match = pattern.exec(data);
+        if (match && match[1]) {
+          onFileDetected(match[1].trim());
+        }
+      }
+    }
+
+    if (onSkillsChanged) {
+      for (const pattern of skillCommandPatterns) {
+        if (pattern.test(data)) {
+          if (skillTimer) clearTimeout(skillTimer);
+          skillTimer = setTimeout(() => onSkillsChanged(), 5000);
+          break;
+        }
+      }
+    }
+
     for (const pattern of activePatterns) {
       if (pattern.test(data)) {
         setState('active');
@@ -67,6 +99,7 @@ export function createStateDetector(onStateChange) {
 
   function destroy() {
     if (idleTimer) clearTimeout(idleTimer);
+    if (skillTimer) clearTimeout(skillTimer);
   }
 
   return { processOutput, destroy, getState: () => currentState };

@@ -441,6 +441,25 @@ body::before {
   flex: 1;
   overflow: hidden;
   padding: 8px;
+  position: relative;
+}
+
+.panel-terminal.drop-active::after {
+  content: 'Drop file to attach';
+  position: absolute;
+  inset: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 255, 135, 0.04);
+  border: 2px dashed var(--green-dim);
+  border-radius: 6px;
+  color: var(--green);
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  z-index: 20;
+  pointer-events: none;
 }
 
 .panel-terminal::-webkit-scrollbar { width: 4px; }
@@ -501,8 +520,53 @@ body::before {
   background: var(--surface);
   border: 1px solid var(--border);
   width: 400px;
+  max-height: 90vh;
+  overflow-y: auto;
   padding: 24px;
   position: relative;
+  transition: width 0.25s ease, max-height 0.25s ease;
+}
+
+.modal.expanded {
+  width: 85vw !important;
+  max-width: 900px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modal-expand-btn {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.modal-expand-btn:hover {
+  color: var(--green);
+  border-color: var(--green-dim);
+}
+
+.modal.expanded .modal textarea {
+  min-height: 300px;
+}
+
+.modal.expanded .skill-detail-panel textarea {
+  min-height: 400px !important;
+}
+
+.modal.expanded .skills-picker-list {
+  max-height: 260px;
 }
 
 .modal-title {
@@ -667,10 +731,1534 @@ body::before {
   border-color: var(--border);
 }
 
+/* ── File Toast ── */
+.toast-container {
+  position: absolute;
+  bottom: 48px;
+  left: 12px;
+  right: 12px;
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 6px;
+  z-index: 50;
+  pointer-events: none;
+}
+
+.file-toast {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #12141a;
+  border: 1px solid #1e2230;
+  padding: 10px 14px;
+  animation: toast-slide-up 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: auto;
+}
+
+.file-toast.dismissing {
+  animation: toast-fade-out 0.2s ease-out forwards;
+}
+
+@keyframes toast-slide-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes toast-fade-out {
+  to { opacity: 0; transform: translateY(8px); }
+}
+
+.file-toast-icon {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--green);
+  font-size: 0.75rem;
+}
+
+.file-toast-name {
+  flex: 1;
+  font-size: 0.72rem;
+  color: #c0c8d8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.file-toast-actions {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.file-toast-btn {
+  font-family: var(--mono);
+  font-size: 0.62rem;
+  padding: 3px 8px;
+  background: transparent;
+  border: 1px solid #1e2230;
+  color: #707a90;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.file-toast-btn:hover {
+  border-color: var(--green-dim);
+  color: var(--green);
+}
+
+/* ── Panel Tabs ── */
+.panel-tabs {
+  display: flex;
+  gap: 0;
+  margin-left: 16px;
+}
+
+.panel-tab {
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  font-weight: 500;
+  color: #505868;
+  background: none;
+  border: none;
+  padding: 5px 14px;
+  cursor: pointer;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  transition: color 0.15s;
+  border-bottom: 2px solid transparent;
+}
+
+.panel-tab:hover { color: var(--text-dim); }
+
+.panel-tab.active {
+  color: var(--green);
+  border-bottom-color: var(--green);
+}
+
+.panel-tab-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ── Agent Editor Layout ── */
+.agent-editor {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+}
+
+.agent-sidebar {
+  width: 130px;
+  flex-shrink: 0;
+  border-right: 1px solid #1a1c24;
+  padding: 8px 0;
+  background: #06080c;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.agent-sidebar-item {
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  color: #505868;
+  padding: 8px 16px;
+  cursor: pointer;
+  border: none;
+  background: none;
+  text-align: left;
+  transition: all 0.15s;
+  letter-spacing: 0.04em;
+  border-left: 2px solid transparent;
+}
+
+.agent-sidebar-item:hover {
+  color: var(--text-dim);
+  background: rgba(255,255,255,0.02);
+}
+
+.agent-sidebar-item.active {
+  color: var(--green);
+  background: rgba(51,255,0,0.04);
+  border-left-color: var(--green);
+}
+
+.agent-content {
+  flex: 1;
+  padding: 20px 24px;
+  overflow-y: auto;
+}
+
+.agent-content::-webkit-scrollbar { width: 4px; }
+.agent-content::-webkit-scrollbar-track { background: transparent; }
+.agent-content::-webkit-scrollbar-thumb { background: #1a1c24; }
+
+.agent-section-title {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-dim);
+  margin-bottom: 8px;
+}
+
+.agent-section-desc {
+  font-size: 0.68rem;
+  color: var(--text-faint);
+  margin-bottom: 16px;
+  line-height: 1.5;
+}
+
+/* ── Purpose textarea ── */
+.agent-purpose-textarea {
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  width: 100%;
+  min-height: 240px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 12px;
+  resize: vertical;
+  outline: none;
+  line-height: 1.6;
+  transition: border-color 0.15s;
+}
+
+.agent-purpose-textarea:focus { border-color: var(--green-dim); }
+
+/* ── Memory & Audit entries ── */
+.memory-entry, .audit-entry {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.72rem;
+  line-height: 1.5;
+}
+
+.memory-entry:last-child, .audit-entry:last-child { border-bottom: none; }
+
+.memory-badge, .audit-badge {
+  font-family: var(--mono);
+  font-size: 0.6rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 2px 6px;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.memory-badge { background: rgba(0,212,255,0.1); color: var(--cyan); border: 1px solid rgba(0,212,255,0.2); }
+.memory-badge.convention { background: rgba(51,255,0,0.08); color: var(--green-dim); border-color: rgba(51,255,0,0.15); }
+.memory-badge.correction { background: rgba(255,92,87,0.08); color: var(--red); border-color: rgba(255,92,87,0.15); }
+.memory-badge.decision { background: rgba(245,191,79,0.08); color: var(--amber); border-color: rgba(245,191,79,0.15); }
+.memory-badge.preference { background: rgba(199,146,234,0.08); color: #c792ea; border-color: rgba(199,146,234,0.15); }
+
+.audit-badge { background: rgba(255,255,255,0.04); color: var(--text-dim); border: 1px solid var(--border); }
+.audit-badge.session_start { color: var(--green-dim); border-color: rgba(51,255,0,0.15); }
+.audit-badge.file_write { color: var(--cyan); border-color: rgba(0,212,255,0.15); }
+.audit-badge.skill_install { color: var(--amber); border-color: rgba(245,191,79,0.15); }
+
+.memory-content, .audit-content { color: var(--text); flex: 1; min-width: 0; }
+.memory-ts, .audit-ts { color: var(--text-faint); font-size: 0.62rem; flex-shrink: 0; white-space: nowrap; }
+
+.memory-empty, .audit-empty {
+  padding: 32px 16px;
+  text-align: center;
+  color: var(--text-faint);
+  font-size: 0.72rem;
+}
+
+/* ── Tag/Chip lists ── */
+.agent-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.agent-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  font-size: 0.72rem;
+  color: var(--text-dim);
+  background: var(--card);
+  letter-spacing: 0.04em;
+}
+
+.agent-tag-remove {
+  color: var(--text-faint);
+  cursor: pointer;
+  font-size: 0.85rem;
+  line-height: 1;
+  transition: color 0.15s;
+}
+
+.agent-tag-remove:hover { color: var(--red); }
+
+.agent-tag-add {
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  color: var(--green-dim);
+  background: none;
+  border: 1px dashed var(--border);
+  padding: 4px 10px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.agent-tag-add:hover { border-color: var(--green-dim); }
+
+.agent-tag-input {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  padding: 4px 10px;
+  background: var(--card);
+  border: 1px solid var(--green-dim);
+  color: var(--text);
+  outline: none;
+  width: 160px;
+}
+
+/* ── File list ── */
+.agent-file-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
+  border-bottom: 1px solid #1a1c24;
+  font-size: 0.72rem;
+}
+
+.agent-file-name {
+  flex: 1;
+  color: var(--text-dim);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.agent-file-actions {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+/* ── Knowledge upload zone ── */
+.agent-kb-upload {
+  border: 1px dashed var(--border);
+  padding: 20px;
+  text-align: center;
+  font-size: 0.7rem;
+  color: var(--text-faint);
+  cursor: pointer;
+  transition: all 0.15s;
+  margin-top: 12px;
+}
+
+.agent-kb-upload:hover {
+  border-color: var(--green-dim);
+  color: var(--text-dim);
+}
+
+.agent-kb-upload.drag-over {
+  border-color: var(--green);
+  background: rgba(51,255,0,0.04);
+}
+
+/* ── Historical card ── */
+.card.historical {
+  opacity: 0.55;
+  border-left: 2px solid var(--text-faint);
+}
+
+.card.historical:hover {
+  opacity: 0.75;
+}
+
+.status-dot.historical {
+  background: var(--text-faint);
+  box-shadow: none;
+}
+
+/* ── Historical session bar ── */
+.historical-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 20px;
+  border-top: 1px solid #1a1c24;
+  background: #06080c;
+  flex-shrink: 0;
+}
+
+.historical-bar-text {
+  font-size: 0.72rem;
+  color: var(--text-faint);
+  letter-spacing: 0.04em;
+}
+
+.btn-restart {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--void);
+  background: var(--green);
+  border: none;
+  padding: 6px 16px;
+  cursor: pointer;
+  letter-spacing: 0.04em;
+  transition: all 0.15s;
+  clip-path: polygon(0 0, calc(100% - 4px) 0, 100% 4px, 100% 100%, 4px 100%, 0 calc(100% - 4px));
+}
+
+.btn-restart:hover {
+  background: #66ff33;
+  box-shadow: 0 0 16px var(--green-glow);
+}
+
+/* ── Header Nav Toggle ── */
+.header-nav {
+  display: flex;
+  gap: 0;
+  margin-left: 16px;
+  border: 1px solid var(--border);
+}
+
+.header-nav-btn {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-dim);
+  background: none;
+  border: none;
+  padding: 4px 14px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.header-nav-btn:hover { color: var(--text); }
+
+.header-nav-btn.active {
+  color: var(--green);
+  background: rgba(51,255,0,0.06);
+}
+
+/* ── Agents Grid View ── */
+.agents-view {
+  padding: 24px;
+  min-height: calc(100vh - 53px);
+  position: relative;
+  z-index: 1;
+}
+
+.agents-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
+}
+
+.agent-template-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  padding: 16px 18px;
+  transition: all 0.15s;
+}
+
+.agent-template-card:hover {
+  background: var(--card-hover);
+  border-color: #3a3a3a;
+}
+
+.agent-template-card .tpl-name {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.agent-template-card .tpl-cwd {
+  font-size: 0.68rem;
+  color: var(--text-faint);
+  margin-bottom: 8px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.agent-template-card .tpl-purpose {
+  font-size: 0.72rem;
+  color: var(--text-dim);
+  line-height: 1.45;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  margin-bottom: 10px;
+}
+
+.agent-template-card .tpl-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 12px;
+}
+
+.agent-template-card .tpl-tag {
+  font-size: 0.62rem;
+  padding: 1px 6px;
+  border: 1px solid var(--border);
+  color: var(--text-faint);
+  letter-spacing: 0.04em;
+}
+
+.agent-template-card .tpl-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.agent-template-card .tpl-actions button {
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  padding: 4px 12px;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  background: none;
+  color: var(--text-dim);
+  transition: all 0.15s;
+}
+
+.agent-template-card .tpl-actions button:hover {
+  border-color: var(--green-dim);
+  color: var(--text);
+}
+
+.agent-template-card .tpl-actions .tpl-launch {
+  background: var(--green);
+  color: var(--void);
+  border-color: var(--green);
+  font-weight: 600;
+}
+
+.agent-template-card .tpl-actions .tpl-launch:hover {
+  background: #66ff33;
+}
+
+.agent-template-card .tpl-actions .tpl-delete:hover {
+  border-color: var(--red);
+  color: var(--red);
+}
+
+.agent-template-add {
+  background: transparent;
+  border: 1px dashed var(--border);
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 160px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.agent-template-add:hover {
+  border-color: var(--green-dim);
+  background: rgba(51,255,0,0.03);
+}
+
+.agent-template-add .tpl-add-icon {
+  font-size: 1.8rem;
+  color: var(--text-faint);
+  line-height: 1;
+  margin-bottom: 8px;
+  transition: color 0.15s;
+}
+
+.agent-template-add:hover .tpl-add-icon {
+  color: var(--green-dim);
+}
+
+.agent-template-add .tpl-add-label {
+  font-size: 0.72rem;
+  color: var(--text-faint);
+  transition: color 0.15s;
+}
+
+.agent-template-add:hover .tpl-add-label {
+  color: var(--text-dim);
+}
+
+/* ── Template Modal ── */
+.modal textarea {
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  width: 100%;
+  min-height: 100px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 8px 12px;
+  resize: vertical;
+  outline: none;
+  margin-bottom: 16px;
+  line-height: 1.5;
+  transition: border-color 0.15s;
+}
+
+.modal textarea:focus {
+  border-color: var(--green-dim);
+}
+
+.modal textarea::placeholder {
+  color: var(--text-faint);
+}
+
+/* ── Skills Input Component ── */
+.skills-input-area {
+  margin-bottom: 16px;
+}
+
+.skill-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-height: 0;
+  margin-bottom: 8px;
+}
+
+.skill-chips-toggle {
+  font-family: var(--mono);
+  font-size: 0.62rem;
+  color: var(--green-dim);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0 2px;
+  align-self: center;
+}
+
+.skill-chips-toggle:hover {
+  color: var(--green);
+  text-decoration: underline;
+}
+
+.skill-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  padding: 2px 8px;
+  border-radius: 3px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  color: var(--text);
+}
+
+.skill-chip[data-source="npx"] {
+  border-color: var(--green-dim);
+  color: var(--green);
+}
+
+.skill-chip[data-source="external"] {
+  border-color: var(--cyan);
+  color: var(--cyan);
+}
+
+.skill-chip .chip-remove {
+  cursor: pointer;
+  opacity: 0.5;
+  font-size: 0.72rem;
+  margin-left: 2px;
+  line-height: 1;
+}
+
+.skill-chip .chip-remove:hover {
+  opacity: 1;
+  color: var(--red);
+}
+
+.skill-chip .chip-name {
+  cursor: pointer;
+}
+
+.skill-chip.selected {
+  outline: 1px solid var(--green);
+  outline-offset: 1px;
+}
+
+/* ── Skill Detail Panel ── */
+.skill-detail-panel {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+  font-size: 0.72rem;
+  position: relative;
+}
+
+.skill-detail-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.skill-detail-name {
+  font-weight: 600;
+  font-size: 0.78rem;
+  color: var(--text);
+}
+
+.skill-detail-badge {
+  font-size: 0.58rem;
+  padding: 1px 6px;
+  border-radius: 2px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.skill-detail-badge[data-source="local"] {
+  background: var(--border);
+  color: var(--text-dim);
+}
+
+.skill-detail-badge[data-source="npx"] {
+  background: rgba(42, 209, 0, 0.15);
+  color: var(--green);
+}
+
+.skill-detail-badge[data-source="external"] {
+  background: rgba(0, 212, 255, 0.12);
+  color: var(--cyan);
+}
+
+.skill-detail-close {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-family: var(--mono);
+  padding: 0 4px;
+}
+
+.skill-detail-close:hover {
+  color: var(--text);
+}
+
+.skill-detail-row {
+  margin-bottom: 6px;
+}
+
+.skill-detail-row label {
+  font-size: 0.6rem !important;
+  margin-bottom: 3px !important;
+  color: var(--text-faint) !important;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.skill-detail-row textarea {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  width: 100%;
+  min-height: 48px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 6px 8px;
+  resize: vertical;
+  outline: none;
+  margin-bottom: 0 !important;
+  line-height: 1.4;
+  transition: border-color 0.15s;
+}
+
+.skill-detail-row textarea:focus {
+  border-color: var(--green-dim);
+}
+
+.skill-detail-row .detail-value {
+  color: var(--text-dim);
+  font-size: 0.68rem;
+  word-break: break-all;
+}
+
+.skill-detail-row .detail-command {
+  font-size: 0.65rem;
+  color: var(--text-dim);
+  background: var(--surface);
+  padding: 4px 8px;
+  border-radius: 3px;
+  border: 1px solid var(--border);
+  word-break: break-all;
+  user-select: all;
+}
+
+.skill-detail-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+  justify-content: flex-end;
+}
+
+.skill-detail-actions button {
+  font-family: var(--mono);
+  font-size: 0.65rem;
+  padding: 3px 10px;
+  border-radius: 3px;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  background: none;
+  color: var(--text-dim);
+  transition: all 0.12s;
+}
+
+.skill-detail-actions button:hover {
+  border-color: var(--text-dim);
+  color: var(--text);
+}
+
+.skill-detail-actions .detail-save {
+  background: var(--green);
+  color: var(--void);
+  border-color: var(--green);
+  font-weight: 600;
+}
+
+.skill-detail-actions .detail-save:hover {
+  background: #66ff33;
+  border-color: #66ff33;
+}
+
+.skill-detail-actions .detail-save:disabled {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.skill-detail-actions .detail-remove {
+  color: var(--red);
+  border-color: transparent;
+}
+
+.skill-detail-actions .detail-remove:hover {
+  border-color: var(--red);
+}
+
+.skills-input-tabs {
+  display: flex;
+  gap: 0;
+  margin-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+.skills-tab {
+  font-family: var(--mono);
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 5px 12px;
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.skills-tab:hover {
+  color: var(--text);
+}
+
+.skills-tab.active {
+  color: var(--green);
+  border-bottom-color: var(--green);
+}
+
+.skill-paste-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.skill-paste-row input {
+  flex: 1;
+  margin-bottom: 0 !important;
+}
+
+.skills-picker-list {
+  max-height: 140px;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--card);
+}
+
+.skill-picker-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  cursor: pointer;
+  font-size: 0.72rem;
+  border-bottom: 1px solid var(--border);
+  transition: background 0.12s;
+}
+
+.skill-picker-item:last-child {
+  border-bottom: none;
+}
+
+.skill-picker-item:hover {
+  background: var(--card-hover);
+}
+
+.skill-picker-item.added {
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+.skill-picker-item .picker-name {
+  font-weight: 500;
+  color: var(--text);
+}
+
+.skill-picker-item .picker-desc {
+  color: var(--text-dim);
+  font-size: 0.65rem;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.skill-picker-item .picker-badge {
+  font-size: 0.58rem;
+  padding: 1px 5px;
+  border-radius: 2px;
+  background: var(--border);
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+
+.skills-picker-search {
+  width: 100%;
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  padding: 7px 10px 7px 30px !important;
+  background: var(--card) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%233a3a3a' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E") no-repeat 9px center !important;
+  border: 1px solid var(--border);
+  border-bottom: none;
+  border-radius: 4px 4px 0 0;
+  color: var(--text);
+  outline: none;
+  margin-bottom: 0 !important;
+  transition: border-color 0.15s;
+}
+
+.skills-picker-search:focus {
+  border-color: var(--green-dim);
+}
+
+.skills-picker-search::placeholder {
+  color: var(--text-faint);
+}
+
+.skills-picker-search-wrap {
+  position: relative;
+}
+
+
+.skills-picker-search-wrap + .skills-picker-list {
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+
+.skills-picker-empty {
+  padding: 12px;
+  text-align: center;
+  color: var(--text-dim);
+  font-size: 0.7rem;
+}
+
+/* ── Connector Input Component ── */
+.connectors-input-area {
+  margin-bottom: 16px;
+}
+
+.connector-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-height: 0;
+  margin-bottom: 8px;
+}
+
+.connector-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  padding: 3px 8px;
+  border-radius: 3px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  color: var(--text);
+  cursor: pointer;
+  transition: border-color 0.15s, outline-color 0.15s;
+}
+
+.connector-chip:hover {
+  border-color: var(--text-dim);
+}
+
+.connector-chip.selected {
+  outline: 1px solid var(--green);
+  outline-offset: 1px;
+}
+
+.connector-chip .chip-icon {
+  width: 18px;
+  height: 18px;
+  border-radius: 3px;
+  background: var(--surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: var(--text-dim);
+  flex-shrink: 0;
+}
+
+.connector-chip .chip-name {
+  cursor: pointer;
+}
+
+.connector-chip .chip-count {
+  font-size: 0.58rem;
+  color: var(--green-dim);
+  background: rgba(42, 209, 0, 0.08);
+  padding: 0 4px;
+  border-radius: 2px;
+}
+
+.connector-chip .chip-remove {
+  cursor: pointer;
+  opacity: 0.5;
+  font-size: 0.72rem;
+  margin-left: 2px;
+  line-height: 1;
+}
+
+.connector-chip .chip-remove:hover {
+  opacity: 1;
+  color: var(--red);
+}
+
+/* Connector Detail Panel */
+.connector-detail-panel {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+  font-size: 0.72rem;
+  position: relative;
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.connector-detail-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.connector-detail-header .chip-icon {
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  background: var(--surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--text-dim);
+  flex-shrink: 0;
+}
+
+.connector-detail-name {
+  font-weight: 600;
+  font-size: 0.78rem;
+  color: var(--text);
+}
+
+.connector-detail-desc {
+  font-size: 0.65rem;
+  color: var(--text-dim);
+  margin-left: auto;
+}
+
+.connector-detail-close {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-family: var(--mono);
+  padding: 0 4px;
+}
+
+.connector-detail-close:hover {
+  color: var(--text);
+}
+
+/* Toggle All Row */
+.connector-toggle-all {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 0;
+  margin-bottom: 4px;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+/* Action Rows */
+.connector-action-row {
+  display: flex;
+  align-items: center;
+  padding: 4px 0;
+  font-size: 0.68rem;
+  border-bottom: 1px solid rgba(255,255,255,0.03);
+}
+
+.connector-action-row:last-child {
+  border-bottom: none;
+}
+
+.connector-action-row .action-name {
+  color: var(--text);
+  flex: 1;
+}
+
+.connector-action-row .action-mcp {
+  color: var(--text-faint);
+  font-size: 0.55rem;
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-right: 8px;
+}
+
+/* CSS Toggle Switch */
+.connector-toggle {
+  position: relative;
+  width: 32px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+.connector-toggle input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+  position: absolute;
+}
+
+.connector-toggle .toggle-track {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.connector-toggle .toggle-track::after {
+  content: '';
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--text-dim);
+  top: 2px;
+  left: 2px;
+  transition: transform 0.2s, background 0.2s;
+}
+
+.connector-toggle input:checked + .toggle-track {
+  background: var(--green-dim);
+}
+
+.connector-toggle input:checked + .toggle-track::after {
+  transform: translateX(16px);
+  background: var(--green);
+}
+
+/* Connector Picker / Catalog */
+.connector-picker-search-wrap {
+  position: relative;
+}
+
+.connector-picker-search {
+  width: 100%;
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  padding: 7px 10px 7px 30px !important;
+  background: var(--card) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%233a3a3a' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E") no-repeat 9px center !important;
+  border: 1px solid var(--border);
+  border-bottom: none;
+  border-radius: 4px 4px 0 0;
+  color: var(--text);
+  outline: none;
+  margin-bottom: 0 !important;
+  transition: border-color 0.15s;
+}
+
+.connector-picker-search:focus {
+  border-color: var(--green-dim);
+}
+
+.connector-picker-search::placeholder {
+  color: var(--text-faint);
+}
+
+.connector-picker-list {
+  max-height: 160px;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: 0 0 4px 4px;
+  background: var(--card);
+}
+
+.connector-picker-search-wrap + .connector-picker-list {
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+
+.connector-category-header {
+  font-family: var(--mono);
+  font-size: 0.55rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-faint);
+  padding: 6px 10px 3px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.connector-picker-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  cursor: pointer;
+  font-size: 0.72rem;
+  border-bottom: 1px solid var(--border);
+  transition: background 0.12s;
+}
+
+.connector-picker-item:last-child {
+  border-bottom: none;
+}
+
+.connector-picker-item:hover {
+  background: var(--card-hover);
+}
+
+.connector-picker-item.added {
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+.connector-picker-item .picker-icon {
+  width: 22px;
+  height: 22px;
+  border-radius: 3px;
+  background: var(--surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: var(--text-dim);
+  flex-shrink: 0;
+}
+
+.connector-picker-item .picker-name {
+  font-weight: 500;
+  color: var(--text);
+}
+
+.connector-picker-item .picker-desc {
+  color: var(--text-dim);
+  font-size: 0.65rem;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.connector-picker-item .picker-badge {
+  font-size: 0.58rem;
+  padding: 1px 5px;
+  border-radius: 2px;
+  background: var(--border);
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+
+.connector-picker-empty {
+  padding: 12px;
+  text-align: center;
+  color: var(--text-dim);
+  font-size: 0.7rem;
+}
+
+.modal.expanded .connector-picker-list {
+  max-height: 260px;
+}
+
+.modal.expanded .connector-detail-panel {
+  max-height: 400px;
+}
+
+/* ── Tools View ── */
+.tools-view {
+  padding: 24px;
+  min-height: calc(100vh - 53px);
+  position: relative;
+  z-index: 1;
+}
+
+.tools-search-bar {
+  position: relative;
+  margin-bottom: 16px;
+}
+
+.tools-search-bar input {
+  width: 100%;
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  padding: 8px 10px 8px 32px;
+  background: var(--card) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%233a3a3a' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E") no-repeat 10px center;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.tools-search-bar input:focus {
+  border-color: var(--green-dim);
+}
+
+.tools-search-bar input::placeholder {
+  color: var(--text-faint);
+}
+
+.tools-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.tools-category-label {
+  font-family: var(--mono);
+  font-size: 0.55rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-faint);
+  padding: 14px 0 6px;
+}
+
+.tools-category-label:first-child {
+  padding-top: 0;
+}
+
+.tools-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  margin-bottom: 4px;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-size: 0.72rem;
+}
+
+.tools-card:hover {
+  background: var(--card-hover);
+  border-color: var(--green-dim);
+}
+
+.tools-card.expanded {
+  border-color: var(--green);
+  background: var(--card-hover);
+}
+
+.tools-card .tool-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  background: var(--surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--text-dim);
+  flex-shrink: 0;
+}
+
+.tools-card .tool-name {
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.tools-card .tool-desc {
+  color: var(--text-dim);
+  font-size: 0.65rem;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tools-card .tool-badge {
+  font-size: 0.58rem;
+  padding: 2px 6px;
+  border-radius: 2px;
+  background: var(--border);
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+
+.tools-card .tool-chevron {
+  color: var(--text-faint);
+  font-size: 0.7rem;
+  transition: transform 0.15s;
+}
+
+.tools-card.expanded .tool-chevron {
+  transform: rotate(90deg);
+}
+
+.tools-detail-panel {
+  background: var(--card);
+  border: 1px solid var(--green-dim);
+  border-radius: 4px;
+  padding: 14px 16px;
+  margin-bottom: 8px;
+  font-size: 0.72rem;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.tools-detail-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+.tools-detail-header .tool-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  background: var(--surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--text-dim);
+  flex-shrink: 0;
+}
+
+.tools-detail-header .tool-name {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.tools-detail-header .tool-desc {
+  color: var(--text-dim);
+  font-size: 0.65rem;
+  margin-left: auto;
+}
+
+.tools-action-row {
+  display: flex;
+  align-items: center;
+  padding: 5px 0;
+  font-size: 0.68rem;
+  border-bottom: 1px solid rgba(255,255,255,0.03);
+}
+
+.tools-action-row:last-child {
+  border-bottom: none;
+}
+
+.tools-action-row .action-name {
+  color: var(--text);
+  flex: 1;
+}
+
+.tools-action-row .action-mcp {
+  color: var(--text-faint);
+  font-size: 0.55rem;
+  max-width: 280px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 /* ── Responsive ── */
 @media (max-width: 900px) {
   .board { grid-template-columns: repeat(2, 1fr); }
   .side-panel { width: 80%; min-width: unset; }
+  .agent-sidebar { width: 100px; }
 }
 </style>
 </head>
@@ -681,16 +2269,35 @@ body::before {
   <div class="header-left">
     <span class="logo">vibe terminal</span>
     <span class="cursor-blink"></span>
+    <nav class="header-nav">
+      <button class="header-nav-btn active" data-view="board" onclick="switchView('board')">Board</button>
+      <button class="header-nav-btn" data-view="agents" onclick="switchView('agents')">Agents</button>
+      <button class="header-nav-btn" data-view="tools" onclick="switchView('tools')">Tools</button>
+    </nav>
     <span class="header-meta">
       <span>0</span> agents &middot; <span>0</span> in progress
     </span>
   </div>
-  <button class="btn-new-agent" onclick="openModal()">+ New Agent</button>
+  <button class="btn-new-agent" id="headerActionBtn" onclick="headerAction()">+ New Task</button>
 </header>
 
 <!-- ── KANBAN BOARD ── -->
 <div class="board" id="board">
   <!-- Columns are rendered by JS -->
+</div>
+
+<!-- ── AGENTS VIEW ── -->
+<div class="agents-view" id="agentsView" style="display:none;">
+  <div class="agents-grid" id="agentsGrid"></div>
+</div>
+
+<!-- ── TOOLS VIEW ── -->
+<div class="tools-view" id="toolsView" style="display:none;">
+  <div class="tools-search-bar">
+    <input type="text" id="toolsSearch" placeholder="Search tools..." oninput="renderToolsView()">
+  </div>
+  <div class="tools-grid" id="toolsGrid"></div>
+  <div class="tools-detail-panel" id="toolsDetailPanel" style="display:none;"></div>
 </div>
 
 <!-- ── SIDE PANEL ── -->
@@ -700,13 +2307,37 @@ body::before {
     <div class="panel-header-left">
       <span class="panel-title" id="panelTitle">Agent</span>
       <span class="panel-session" id="panelSession">session-xxx</span>
+      <div class="panel-tabs">
+        <button class="panel-tab active" data-tab="terminal" onclick="switchPanelTab('terminal')">Terminal</button>
+        <button class="panel-tab" data-tab="agent" onclick="switchPanelTab('agent')">Agent</button>
+      </div>
     </div>
     <div>
-      <button class="btn-close" onclick="killCurrentSession()" style="margin-right:4px">Kill</button>
+      <button class="btn-close" id="killBtn" onclick="killCurrentSession()" style="margin-right:4px">Kill</button>
       <button class="btn-close" onclick="closePanel()">ESC ×</button>
     </div>
   </div>
-  <div class="panel-terminal" id="panelTerminal"></div>
+  <!-- Tab: Terminal -->
+  <div class="panel-tab-content" id="tabTerminal">
+    <div class="panel-terminal" id="panelTerminal"></div>
+    <div class="toast-container" id="toastContainer"></div>
+  </div>
+  <!-- Tab: Agent Editor -->
+  <div class="panel-tab-content" id="tabAgent" style="display:none;">
+    <div class="agent-editor">
+      <nav class="agent-sidebar" id="agentSidebar">
+        <button class="agent-sidebar-item active" data-section="identity" onclick="switchAgentSection('identity')">Identity</button>
+        <button class="agent-sidebar-item" data-section="constraints" onclick="switchAgentSection('constraints')">Constraints</button>
+        <button class="agent-sidebar-item" data-section="skills" onclick="switchAgentSection('skills')">Skills</button>
+        <button class="agent-sidebar-item" data-section="tools" onclick="switchAgentSection('tools')">Tools</button>
+        <button class="agent-sidebar-item" data-section="files" onclick="switchAgentSection('files')">Files</button>
+        <button class="agent-sidebar-item" data-section="knowledge" onclick="switchAgentSection('knowledge')">Knowledge</button>
+        <button class="agent-sidebar-item" data-section="memory" onclick="switchAgentSection('memory')">Memory</button>
+        <button class="agent-sidebar-item" data-section="audit" onclick="switchAgentSection('audit')">Audit</button>
+      </nav>
+      <div class="agent-content" id="agentContent"></div>
+    </div>
+  </div>
   <div class="panel-footer" id="panelFooter">
     <div class="panel-mode-bar" id="panelModeBar">
       <div class="mode-dot" id="panelModeDot"></div>
@@ -719,12 +2350,80 @@ body::before {
 <div class="modal-overlay" id="modalOverlay">
   <div class="modal" onclick="event.stopPropagation()">
     <div class="modal-title">new task</div>
-    <div class="modal-subtitle">Add to backlog</div>
-    <label for="agentName">task name</label>
-    <input type="text" id="agentName" placeholder="e.g. Refactor auth module" autofocus>
+    <div class="modal-subtitle">Choose an agent to run</div>
+    <label for="taskTemplateSelect">agent</label>
+    <select id="taskTemplateSelect">
+      <option value="">-- select agent --</option>
+    </select>
     <div class="modal-actions">
       <button class="btn-cancel" onclick="closeModal()">Cancel</button>
       <button class="btn-create" onclick="createAgent()">Create</button>
+    </div>
+  </div>
+</div>
+
+<!-- Create/Edit Template Modal -->
+<div class="modal-overlay" id="templateModalOverlay">
+  <div class="modal" id="templateModal" style="width:460px;" onclick="event.stopPropagation()">
+    <button class="modal-expand-btn" onclick="toggleModalExpand()" id="modalExpandBtn" title="Expand">&#x26F6;</button>
+    <div class="modal-title" id="templateModalTitle">new agent template</div>
+    <div class="modal-subtitle" id="templateModalSubtitle">Create a reusable agent configuration</div>
+    <label for="tplName">name</label>
+    <input type="text" id="tplName" placeholder="e.g. SDR Agent">
+    <label for="tplCwd">default directory</label>
+    <div class="dir-input-row" style="margin-bottom:16px;">
+      <div class="path-input-wrapper">
+        <input type="text" id="tplCwd" placeholder="~/Projects/my-agent" autocomplete="off" style="margin-bottom:0;">
+        <div class="autocomplete-list" id="tplAutocompleteList"></div>
+      </div>
+      <button class="browse-btn" onclick="browseForTemplate()">Browse</button>
+      <button class="browse-btn" onclick="importFromDirectory()" id="tplImportBtn" style="color:var(--green-dim);">Import</button>
+    </div>
+    <label for="tplIdentity">identity (CLAUDE.md)</label>
+    <textarea id="tplIdentity" placeholder="Who this agent is: role, scope of authority, communication style..." rows="4"></textarea>
+    <label for="tplConstraints">constraints (AGENTS.md)</label>
+    <textarea id="tplConstraints" placeholder="How this agent operates: messaging rules, workflows, guardrails..." rows="3"></textarea>
+    <label>skills</label>
+    <div class="skills-input-area">
+      <div id="tplSkillChips" class="skill-chips"></div>
+      <div id="skillDetailPanel" class="skill-detail-panel" style="display:none;"></div>
+      <div class="skills-input-tabs">
+        <button class="skills-tab active" data-mode="paste" onclick="switchSkillInputMode('paste')">Paste command</button>
+        <button class="skills-tab" data-mode="local" onclick="switchSkillInputMode('local')">Local skills</button>
+        <button class="skills-tab" data-mode="browse" onclick="switchSkillInputMode('browse')">Browse</button>
+      </div>
+      <div id="skillModePaste">
+        <div class="skill-paste-row">
+          <input id="skillPasteInput" placeholder="npx skills add repo/name --skill skill-name" onkeydown="if(event.key==='Enter'){event.preventDefault();parseAndAddSkillCommand();}">
+          <button class="browse-btn" onclick="parseAndAddSkillCommand()">Add</button>
+        </div>
+      </div>
+      <div id="skillModeLocal" style="display:none;">
+        <div class="skills-picker-search-wrap">
+          <input class="skills-picker-search" id="localSkillsSearch" placeholder="Search local skills..." oninput="renderLocalSkillsList()">
+        </div>
+        <div id="localSkillsList" class="skills-picker-list"></div>
+      </div>
+      <div id="skillModeBrowse" style="display:none;">
+        <div class="skills-picker-search-wrap">
+          <input class="skills-picker-search" id="externalSkillsSearch" placeholder="Search skills..." oninput="renderExternalSkillsList()">
+        </div>
+        <div id="externalSkillsList" class="skills-picker-list"></div>
+      </div>
+    </div>
+    <label>connectors</label>
+    <div class="connectors-input-area">
+      <div id="tplConnectorChips" class="connector-chips"></div>
+      <div id="connectorDetailPanel" class="connector-detail-panel" style="display:none;"></div>
+      <div class="connector-picker-search-wrap">
+        <input class="connector-picker-search" id="connectorSearch"
+               placeholder="Search connectors..." oninput="renderConnectorCatalog()">
+      </div>
+      <div id="connectorCatalog" class="connector-picker-list"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeTemplateModal()">Cancel</button>
+      <button class="btn-create" id="tplSubmitBtn" onclick="submitTemplate()">Create</button>
     </div>
   </div>
 </div>
@@ -769,6 +2468,337 @@ let activeTerminal = null;
 let currentPanelSession = null;
 let nextBacklogId = backlogTasks.length + 1;
 let startSessionCardId = null;
+let currentAgentConfig = null;
+let currentAgentPurpose = '';
+let currentAgentConstraints = '';
+let currentPanelTab = 'terminal';
+let currentAgentSection = 'identity';
+let purposeSaveTimer = null;
+let constraintsSaveTimer = null;
+let currentView = 'board';
+let templates = [];
+let pendingTemplateId = null;
+let editingTemplateId = null;
+let tplSkillEntries = []; // SkillEntry[] for current modal session
+let localSkillsLoaded = false;
+let externalSkillsLoaded = false;
+let localSkillsData = [];
+let externalSkillsData = [];
+
+function normalizeSkills(skills) {
+  if (!Array.isArray(skills)) return [];
+  return skills.map(s => typeof s === 'string' ? { name: s, source: 'local' } : s);
+}
+
+let skillChipsExpanded = false;
+let selectedSkillIndex = -1;
+const SKILL_CHIPS_LIMIT = 3;
+
+function renderSkillChips() {
+  const container = document.getElementById('tplSkillChips');
+  if (!container) return;
+  const total = tplSkillEntries.length;
+  const collapsed = !skillChipsExpanded && total > SKILL_CHIPS_LIMIT;
+  const visible = collapsed ? tplSkillEntries.slice(0, SKILL_CHIPS_LIMIT) : tplSkillEntries;
+  let html = visible.map((entry, i) =>
+    `<span class="skill-chip${i === selectedSkillIndex ? ' selected' : ''}" data-source="${escapeHtml(entry.source || 'local')}">` +
+    `<span class="chip-name" onclick="openSkillDetail(${i})">${escapeHtml(entry.name)}</span>` +
+    `<span class="chip-remove" onclick="event.stopPropagation();removeSkillChip(${i})">&times;</span>` +
+    `</span>`
+  ).join('');
+  if (collapsed) {
+    html += `<button class="skill-chips-toggle" onclick="toggleSkillChips()">+${total - SKILL_CHIPS_LIMIT} more &middot; see all</button>`;
+  } else if (total > SKILL_CHIPS_LIMIT) {
+    html += `<button class="skill-chips-toggle" onclick="toggleSkillChips()">show less</button>`;
+  }
+  container.innerHTML = html;
+  refreshSkillPickerStates();
+}
+
+function toggleSkillChips() {
+  skillChipsExpanded = !skillChipsExpanded;
+  renderSkillChips();
+}
+
+let skillDetailOriginalContent = '';
+
+async function openSkillDetail(index) {
+  if (selectedSkillIndex === index) { closeSkillDetail(); return; }
+  selectedSkillIndex = index;
+  const entry = tplSkillEntries[index];
+  const panel = document.getElementById('skillDetailPanel');
+  const sourceLabel = { local: 'local', npx: 'installed', external: 'catalog' }[entry.source] || entry.source;
+
+  // Derive path from template cwd if not set
+  if (!entry.path && entry.source === 'local') {
+    const cwd = document.getElementById('tplCwd').value.trim();
+    if (cwd) {
+      entry.path = `${cwd.replace(/\/+$/, '')}/.claude/skills/${entry.name}/SKILL.md`;
+    }
+  }
+  const hasFile = !!entry.path;
+
+  // Build metadata rows
+  let metaRows = '';
+  if (entry.installCommand) {
+    metaRows += `<div class="skill-detail-row">
+      <label>install command</label>
+      <div class="detail-command">${escapeHtml(entry.installCommand)}</div>
+    </div>`;
+  }
+  if (entry.repo) {
+    metaRows += `<div class="skill-detail-row">
+      <label>repo</label>
+      <div class="detail-value">${escapeHtml(entry.repo)}</div>
+    </div>`;
+  }
+  if (entry.path) {
+    metaRows += `<div class="skill-detail-row">
+      <label>path</label>
+      <div class="detail-value">${escapeHtml(entry.path)}</div>
+    </div>`;
+  }
+
+  // Show loading state
+  panel.innerHTML = `
+    <button class="skill-detail-close" onclick="closeSkillDetail()">&times;</button>
+    <div class="skill-detail-header">
+      <span class="skill-detail-name">${escapeHtml(entry.name)}</span>
+      <span class="skill-detail-badge" data-source="${escapeHtml(entry.source || 'local')}">${escapeHtml(sourceLabel)}</span>
+    </div>
+    ${metaRows}
+    <div class="skill-detail-row">
+      <label>skill.md</label>
+      <textarea id="skillDetailContent" style="min-height:120px;" placeholder="${hasFile ? 'Loading...' : 'No local file — paste or write skill content here...'}" disabled></textarea>
+    </div>
+    <div class="skill-detail-actions">
+      <button class="detail-remove" onclick="removeSkillFromDetail(${index})">Remove skill</button>
+      <button onclick="closeSkillDetail()">Cancel</button>
+      <button class="detail-save" id="skillDetailSaveBtn" onclick="saveSkillDetail(${index})" disabled>Save</button>
+    </div>
+  `;
+  panel.style.display = '';
+  renderSkillChips();
+
+  // Load content
+  const textarea = document.getElementById('skillDetailContent');
+  if (hasFile) {
+    try {
+      const res = await fetch(`${API}/api/skill-content?path=${encodeURIComponent(entry.path)}`);
+      const data = await res.json();
+      skillDetailOriginalContent = data.content || '';
+      textarea.value = skillDetailOriginalContent;
+    } catch {
+      skillDetailOriginalContent = '';
+      textarea.value = '';
+      textarea.placeholder = 'Could not load file';
+    }
+  } else {
+    skillDetailOriginalContent = '';
+    textarea.value = '';
+  }
+  textarea.disabled = false;
+  textarea.oninput = () => {
+    const changed = textarea.value !== skillDetailOriginalContent;
+    document.getElementById('skillDetailSaveBtn').disabled = !changed;
+  };
+}
+
+function closeSkillDetail() {
+  selectedSkillIndex = -1;
+  document.getElementById('skillDetailPanel').style.display = 'none';
+  renderSkillChips();
+}
+
+async function saveSkillDetail(index) {
+  const entry = tplSkillEntries[index];
+  const textarea = document.getElementById('skillDetailContent');
+  const content = textarea.value;
+  const btn = document.getElementById('skillDetailSaveBtn');
+  btn.textContent = 'Saving...';
+  btn.disabled = true;
+
+  // Determine save path — use existing or derive from template cwd
+  let savePath = entry.path;
+  if (!savePath) {
+    const cwd = document.getElementById('tplCwd').value.trim();
+    if (cwd) {
+      savePath = `${cwd.replace(/\/+$/, '')}/.claude/skills/${entry.name}/SKILL.md`;
+      entry.path = savePath;
+      entry.source = 'local';
+    }
+  }
+
+  if (savePath) {
+    try {
+      await fetch(`${API}/api/skill-content`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ path: savePath, content }),
+      });
+      skillDetailOriginalContent = content;
+      // Update description from frontmatter
+      const fmMatch = content.match(/^---\n([\s\S]*?)\n---/);
+      if (fmMatch) {
+        const descMatch = fmMatch[1].match(/^description:\s*(.+)$/m);
+        if (descMatch) entry.description = descMatch[1].trim();
+      }
+      btn.textContent = 'Saved';
+      setTimeout(() => { btn.textContent = 'Save'; }, 1200);
+    } catch {
+      btn.textContent = 'Error';
+      setTimeout(() => { btn.textContent = 'Save'; btn.disabled = false; }, 1500);
+    }
+  } else {
+    btn.textContent = 'No directory set';
+    setTimeout(() => { btn.textContent = 'Save'; btn.disabled = false; }, 1500);
+  }
+}
+
+function removeSkillFromDetail(index) {
+  closeSkillDetail();
+  removeSkillChip(index);
+}
+
+function addSkillEntry(entry) {
+  if (tplSkillEntries.some(e => e.name === entry.name)) return;
+  tplSkillEntries.push(entry);
+  renderSkillChips();
+}
+
+function removeSkillChip(index) {
+  if (selectedSkillIndex === index) closeSkillDetail();
+  else if (selectedSkillIndex > index) selectedSkillIndex--;
+  tplSkillEntries.splice(index, 1);
+  renderSkillChips();
+}
+
+function switchSkillInputMode(mode) {
+  document.querySelectorAll('.skills-tab').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.mode === mode);
+  });
+  document.getElementById('skillModePaste').style.display = mode === 'paste' ? '' : 'none';
+  document.getElementById('skillModeLocal').style.display = mode === 'local' ? '' : 'none';
+  document.getElementById('skillModeBrowse').style.display = mode === 'browse' ? '' : 'none';
+  // Clear search inputs when switching
+  const ls = document.getElementById('localSkillsSearch');
+  const es = document.getElementById('externalSkillsSearch');
+  if (ls) ls.value = '';
+  if (es) es.value = '';
+  if (mode === 'local') {
+    if (!localSkillsLoaded) loadLocalSkillsPicker();
+    else renderLocalSkillsList();
+    setTimeout(() => ls?.focus(), 50);
+  }
+  if (mode === 'browse') {
+    if (!externalSkillsLoaded) loadExternalSkillsPicker();
+    else renderExternalSkillsList();
+    setTimeout(() => es?.focus(), 50);
+  }
+}
+
+function parseAndAddSkillCommand() {
+  const input = document.getElementById('skillPasteInput');
+  const val = input.value.trim();
+  if (!val) return;
+  // Try to parse: npx ... add <repo> --skill <name>
+  const skillMatch = val.match(/--skill\s+(\S+)/);
+  const repoMatch = val.match(/add\s+(\S+)/);
+  if (skillMatch) {
+    addSkillEntry({
+      name: skillMatch[1],
+      source: 'npx',
+      installCommand: val,
+      repo: repoMatch ? repoMatch[1] : undefined,
+    });
+  } else {
+    // Fallback: treat whole input as a skill name
+    addSkillEntry({ name: val, source: 'npx', installCommand: val });
+  }
+  input.value = '';
+}
+
+async function loadLocalSkillsPicker() {
+  const list = document.getElementById('localSkillsList');
+  list.innerHTML = '<div class="skills-picker-empty">Loading...</div>';
+  try {
+    const res = await fetch(`${API}/api/skills`);
+    localSkillsData = await res.json();
+  } catch { localSkillsData = []; }
+  localSkillsLoaded = true;
+  renderLocalSkillsList();
+}
+
+function renderLocalSkillsList() {
+  const list = document.getElementById('localSkillsList');
+  if (localSkillsData.length === 0) {
+    list.innerHTML = '<div class="skills-picker-empty">No local skills found across agents</div>';
+    return;
+  }
+  const q = (document.getElementById('localSkillsSearch')?.value || '').toLowerCase();
+  const filtered = q ? localSkillsData.filter(s =>
+    s.name.toLowerCase().includes(q) || (s.description || '').toLowerCase().includes(q) || (s.sourceAgent || '').toLowerCase().includes(q)
+  ) : localSkillsData;
+  if (filtered.length === 0) {
+    list.innerHTML = '<div class="skills-picker-empty">No matches</div>';
+    return;
+  }
+  list.innerHTML = filtered.map(s => {
+    const added = tplSkillEntries.some(e => e.name === s.name);
+    return `<div class="skill-picker-item${added ? ' added' : ''}" onclick="pickLocalSkill('${escapeHtml(s.name)}', '${escapeHtml(s.path || '')}', '${escapeHtml(s.description || '')}')">` +
+      `<span class="picker-name">${escapeHtml(s.name)}</span>` +
+      `<span class="picker-desc">${escapeHtml(s.description || s.folder)}</span>` +
+      `<span class="picker-badge">${escapeHtml(s.sourceAgent || '')}</span>` +
+      `</div>`;
+  }).join('');
+}
+
+function pickLocalSkill(name, path, description) {
+  addSkillEntry({ name, source: 'local', path: path || undefined, description: description || undefined });
+}
+
+async function loadExternalSkillsPicker() {
+  const list = document.getElementById('externalSkillsList');
+  list.innerHTML = '<div class="skills-picker-empty">Loading from GitHub...</div>';
+  try {
+    const res = await fetch(`${API}/api/skills/external`);
+    externalSkillsData = await res.json();
+  } catch { externalSkillsData = []; }
+  externalSkillsLoaded = true;
+  renderExternalSkillsList();
+}
+
+function renderExternalSkillsList() {
+  const list = document.getElementById('externalSkillsList');
+  if (externalSkillsData.length === 0) {
+    list.innerHTML = '<div class="skills-picker-empty">Could not load external skills</div>';
+    return;
+  }
+  const q = (document.getElementById('externalSkillsSearch')?.value || '').toLowerCase();
+  const filtered = q ? externalSkillsData.filter(s =>
+    s.name.toLowerCase().includes(q) || (s.repo || '').toLowerCase().includes(q)
+  ) : externalSkillsData;
+  if (filtered.length === 0) {
+    list.innerHTML = '<div class="skills-picker-empty">No matches</div>';
+    return;
+  }
+  list.innerHTML = filtered.map(s => {
+    const added = tplSkillEntries.some(e => e.name === s.name);
+    return `<div class="skill-picker-item${added ? ' added' : ''}" onclick="pickExternalSkill('${escapeHtml(s.name)}', '${escapeHtml(s.repo)}', '${escapeHtml(s.installCommand)}')">` +
+      `<span class="picker-name">${escapeHtml(s.name)}</span>` +
+      `<span class="picker-desc">${escapeHtml(s.repo)}</span>` +
+      `</div>`;
+  }).join('');
+}
+
+function pickExternalSkill(name, repo, installCommand) {
+  addSkillEntry({ name, source: 'external', repo, installCommand });
+}
+
+function refreshSkillPickerStates() {
+  if (localSkillsLoaded) renderLocalSkillsList();
+  if (externalSkillsLoaded) renderExternalSkillsList();
+}
 
 // ── API ──
 async function fetchSessions() {
@@ -778,11 +2808,13 @@ async function fetchSessions() {
   } catch { liveSessions = []; }
 }
 
-async function createSessionAPI(name, cwd) {
+async function createSessionAPI(name, cwd, templateId) {
+  const body = { name, cwd };
+  if (templateId) body.templateId = templateId;
   const res = await fetch(`${API}/api/sessions`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ name, cwd }),
+    body: JSON.stringify(body),
   });
   return res.json();
 }
@@ -794,6 +2826,19 @@ async function deleteSessionAPI(id) {
 async function fetchAutocomplete(path) {
   const res = await fetch(`${API}/api/autocomplete?path=${encodeURIComponent(path)}`);
   return res.json();
+}
+
+// ── HELPERS ──
+function relativeTime(ts) {
+  const diff = Date.now() - ts;
+  const secs = Math.floor(diff / 1000);
+  if (secs < 60) return 'just now';
+  const mins = Math.floor(secs / 60);
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  const days = Math.floor(hrs / 24);
+  return `${days}d ago`;
 }
 
 // ── RENDER ──
@@ -811,11 +2856,14 @@ function getAllCards() {
     let statusClass = 'running';
     if (s.status === 'review') { col = 'review'; statusClass = 'paused'; }
     if (s.status === 'done') { col = 'done'; statusClass = 'done'; }
+    if (s.status === 'historical') { col = 'done'; statusClass = 'historical'; }
     if (s._manualCol) { col = s._manualCol; }
     cards.push({
       id: s.id, title: s.name, col, status: statusClass,
-      tag: 'session', preview: s.cwd, session: s.id,
+      tag: s.status === 'historical' ? 'ended' : 'session',
+      preview: s.cwd, session: s.id,
       isBacklog: false, sessionData: s,
+      isHistorical: s.status === 'historical',
     });
   });
   return cards;
@@ -853,9 +2901,13 @@ function render() {
 
     colCards.forEach(card => {
       const cardEl = document.createElement('div');
-      cardEl.className = 'card';
+      cardEl.className = 'card' + (card.isHistorical ? ' historical' : '');
       cardEl.draggable = true;
       cardEl.dataset.id = card.id;
+
+      const metaTime = card.isHistorical && card.sessionData?.endedAt
+        ? relativeTime(card.sessionData.endedAt)
+        : card.session;
 
       cardEl.innerHTML = `
         <div class="card-top">
@@ -865,7 +2917,7 @@ function render() {
         <div class="card-preview"><span class="prompt-char">${escapeHtml(card.preview)}</span></div>
         <div class="card-meta">
           <span class="card-tag">${card.tag}</span>
-          <span>${card.session}</span>
+          <span>${metaTime}</span>
         </div>
       `;
 
@@ -888,6 +2940,35 @@ function render() {
         }
       });
 
+      // Double-click to rename backlog tasks
+      if (card.isBacklog) {
+        const titleEl = cardEl.querySelector('.card-title');
+        titleEl.addEventListener('dblclick', e => {
+          e.preventDefault();
+          e.stopPropagation();
+          const input = document.createElement('input');
+          input.className = 'card-title-input';
+          input.value = card.title;
+          input.style.cssText = 'font-family:var(--mono);font-size:0.82rem;font-weight:500;color:var(--text);background:var(--card);border:1px solid var(--green-dim);outline:none;padding:1px 4px;width:100%;';
+          titleEl.replaceWith(input);
+          input.focus();
+          input.select();
+          const save = () => {
+            const newName = input.value.trim();
+            if (newName) {
+              const task = backlogTasks.find(t => t.id === card.id);
+              if (task) { task.name = newName; localStorage.setItem('vt-backlog', JSON.stringify(backlogTasks)); }
+            }
+            render();
+          };
+          input.addEventListener('blur', save);
+          input.addEventListener('keydown', ev => {
+            if (ev.key === 'Enter') { input.blur(); }
+            if (ev.key === 'Escape') { input.value = card.title; input.blur(); }
+          });
+        });
+      }
+
       body.appendChild(cardEl);
     });
 
@@ -904,10 +2985,13 @@ function escapeHtml(str) {
 }
 
 function updateHeaderCounts() {
-  const total = backlogTasks.length + liveSessions.length;
+  const liveCount = liveSessions.filter(s => s.status !== 'historical').length;
+  const total = backlogTasks.length + liveCount;
   const active = liveSessions.filter(s => s.status === 'active').length;
-  document.querySelector('.header-meta').innerHTML =
-    `<span>${total}</span> agents &middot; <span>${active}</span> in progress`;
+  const historical = liveSessions.filter(s => s.status === 'historical').length;
+  let meta = `<span>${total}</span> agents &middot; <span>${active}</span> in progress`;
+  if (historical > 0) meta += ` &middot; <span>${historical}</span> archived`;
+  document.querySelector('.header-meta').innerHTML = meta;
 }
 
 function handleDrop(cardId, targetCol) {
@@ -936,6 +3020,27 @@ function openPanel(card) {
   title.textContent = card.title;
   sessionEl.textContent = card.session;
   currentPanelSession = card.sessionData;
+
+  // Reset to terminal tab
+  currentPanelTab = 'terminal';
+  currentAgentConfig = null;
+  currentAgentPurpose = '';
+  currentAgentConstraints = '';
+  currentAgentSection = 'identity';
+  document.querySelectorAll('.panel-tab').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.tab === 'terminal');
+  });
+  document.getElementById('tabTerminal').style.display = 'flex';
+  document.getElementById('tabAgent').style.display = 'none';
+  document.querySelectorAll('.agent-sidebar-item').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.section === 'identity');
+  });
+
+  const isHistorical = card.sessionData?.status === 'historical';
+
+  // Hide Kill button and show different footer for historical sessions
+  const killBtn = document.getElementById('killBtn');
+  if (killBtn) killBtn.style.display = isHistorical ? 'none' : '';
 
   const state = card.sessionData?.status || 'active';
   updateModeIndicator(state);
@@ -977,6 +3082,31 @@ function openPanel(card) {
   term.open(terminalEl);
   setTimeout(() => fitAddon.fit(), 50);
 
+  // Drag & drop files → upload to server, paste path (same as Terminal.app)
+  let dropCounter = 0;
+  terminalEl.addEventListener('dragenter', e => { e.preventDefault(); dropCounter++; terminalEl.classList.add('drop-active'); });
+  terminalEl.addEventListener('dragleave', () => { dropCounter--; if (dropCounter <= 0) { dropCounter = 0; terminalEl.classList.remove('drop-active'); } });
+  terminalEl.addEventListener('dragover', e => { e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; });
+  terminalEl.addEventListener('drop', async e => {
+    e.preventDefault();
+    dropCounter = 0;
+    terminalEl.classList.remove('drop-active');
+    const files = Array.from(e.dataTransfer.files);
+    if (!files.length || ws.readyState !== WebSocket.OPEN) return;
+    const paths = [];
+    for (const file of files) {
+      const form = new FormData();
+      form.append('file', file);
+      const res = await fetch(`${API}/api/drop`, { method: 'POST', body: form });
+      const { path } = await res.json();
+      if (path) paths.push(path.replace(/([ '"\\\(\)&;|<>$`!#])/g, '\\$1'));
+    }
+    if (paths.length > 0) {
+      ws.send(JSON.stringify({ type: 'input', data: paths.join(' ') }));
+      files.forEach(f => showDropToast(f.name));
+    }
+  });
+
   const ws = new WebSocket(`${WS_URL}?sessionId=${card.session}`);
 
   ws.onmessage = (event) => {
@@ -993,6 +3123,27 @@ function openPanel(card) {
         delete sess._manualCol;
         render();
       }
+    } else if (msg.type === 'file') {
+      showFileToast(msg.path);
+      if (currentAgentConfig && currentPanelTab === 'agent' && currentAgentSection === 'files') {
+        if (!currentAgentConfig.files.includes(msg.path)) {
+          currentAgentConfig.files.push(msg.path);
+          renderFilesSection(document.getElementById('agentContent'));
+        }
+      }
+    } else if (msg.type === 'skills-changed') {
+      // Auto-refresh skills tab if visible
+      if (currentPanelTab === 'agent' && currentAgentSection === 'skills' && !currentSkillViewing) {
+        loadSkillsList();
+      }
+      // Also refresh identity since CLAUDE.md was updated
+      if (currentPanelTab === 'agent' && currentAgentSection === 'identity') {
+        loadAgentConfig(currentPanelSession.id);
+      }
+    } else if (msg.type === 'historical') {
+      // Read-only mode: disable input, show restart bar
+      term.options.disableStdin = true;
+      showHistoricalBar(card);
     } else if (msg.type === 'exit') {
       term.write('\r\n\x1b[2m[Process exited]\x1b[0m\r\n');
     }
@@ -1022,9 +3173,63 @@ function openPanel(card) {
   document.addEventListener('keydown', handleEsc);
 }
 
+function showFileToast(filePath) {
+  const container = document.getElementById('toastContainer');
+  const fileName = filePath.split('/').pop();
+
+  const toast = document.createElement('div');
+  toast.className = 'file-toast';
+  toast.innerHTML = `
+    <div class="file-toast-icon">&bull;</div>
+    <span class="file-toast-name" title="${escapeHtml(filePath)}">${escapeHtml(fileName)}</span>
+    <div class="file-toast-actions">
+      <button class="file-toast-btn" data-action="file">Open</button>
+      <button class="file-toast-btn" data-action="folder">Finder</button>
+    </div>
+  `;
+
+  toast.querySelectorAll('.file-toast-btn').forEach(btn => {
+    btn.onclick = async () => {
+      await fetch(`${API}/api/open`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ path: filePath, action: btn.dataset.action }),
+      });
+      dismissToast(toast);
+    };
+  });
+
+  container.appendChild(toast);
+
+  const timer = setTimeout(() => dismissToast(toast), 8000);
+  toast._dismissTimer = timer;
+}
+
+function dismissToast(toast) {
+  if (toast._dismissed) return;
+  toast._dismissed = true;
+  clearTimeout(toast._dismissTimer);
+  toast.classList.add('dismissing');
+  toast.addEventListener('animationend', () => toast.remove());
+}
+
+function showDropToast(fileName) {
+  const container = document.getElementById('toastContainer');
+  const toast = document.createElement('div');
+  toast.className = 'file-toast';
+  toast.innerHTML = `
+    <div class="file-toast-icon" style="color:var(--green);">&#x2713;</div>
+    <span class="file-toast-name">${escapeHtml(fileName)} attached</span>
+  `;
+  container.appendChild(toast);
+  const timer = setTimeout(() => dismissToast(toast), 4000);
+  toast._dismissTimer = timer;
+}
+
 function updateModeIndicator(state) {
   const modeDot = document.getElementById('panelModeDot');
   const modeText = document.getElementById('panelModeText');
+  if (!modeDot || !modeText) return; // Footer may be replaced for historical sessions
   if (state === 'active') {
     modeDot.className = 'mode-dot code';
     modeText.textContent = '\u26A1 in progress';
@@ -1037,16 +3242,58 @@ function updateModeIndicator(state) {
   }
 }
 
+function showHistoricalBar(card) {
+  const footer = document.getElementById('panelFooter');
+  const endedText = card.sessionData?.endedAt
+    ? `Session ended ${relativeTime(card.sessionData.endedAt)}`
+    : 'Session ended';
+  footer.innerHTML = `
+    <div class="historical-bar">
+      <span class="historical-bar-text">${endedText}</span>
+      <button class="btn-restart" onclick="restartSession()">Restart</button>
+    </div>
+  `;
+}
+
+async function restartSession() {
+  if (!currentPanelSession) return;
+  const { name, cwd } = currentPanelSession;
+  // Create new live session with same name + cwd
+  const session = await createSessionAPI(name, cwd);
+  closePanel();
+  await fetchSessions();
+  render();
+  // Open the new session
+  const card = getAllCards().find(c => c.session === session.id);
+  if (card) openPanel(card);
+}
+
 function closePanel() {
   document.getElementById('sidePanel').classList.remove('open');
   document.getElementById('panelOverlay').classList.remove('open');
+  document.getElementById('toastContainer').innerHTML = '';
   document.removeEventListener('keydown', handleEsc);
+  currentAgentConfig = null;
+  currentAgentPurpose = '';
+  currentAgentConstraints = '';
+  if (purposeSaveTimer) clearTimeout(purposeSaveTimer);
+  if (constraintsSaveTimer) clearTimeout(constraintsSaveTimer);
   if (activeTerminal) {
     if (activeTerminal.ws) activeTerminal.ws.close();
     activeTerminal.term.dispose();
     window.removeEventListener('resize', activeTerminal.resizeHandler);
     activeTerminal = null;
   }
+  // Restore default footer
+  document.getElementById('panelFooter').innerHTML = `
+    <div class="panel-mode-bar" id="panelModeBar">
+      <div class="mode-dot" id="panelModeDot"></div>
+      <span id="panelModeText">active</span>
+    </div>
+  `;
+  // Restore Kill button visibility
+  const killBtn = document.querySelector('.panel-header .btn-close[onclick="killCurrentSession()"]');
+  if (killBtn) killBtn.style.display = '';
 }
 
 function handleEsc(e) {
@@ -1061,13 +3308,1174 @@ async function killCurrentSession() {
   render();
 }
 
+// ── PANEL TABS ──
+function switchPanelTab(tab) {
+  currentPanelTab = tab;
+  document.querySelectorAll('.panel-tab').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.tab === tab);
+  });
+  document.getElementById('tabTerminal').style.display = tab === 'terminal' ? 'flex' : 'none';
+  document.getElementById('tabAgent').style.display = tab === 'agent' ? 'flex' : 'none';
+
+  if (tab === 'terminal' && activeTerminal) {
+    setTimeout(() => activeTerminal.fitAddon.fit(), 50);
+    activeTerminal.term.focus();
+  }
+  if (tab === 'agent' && currentPanelSession) {
+    loadAgentConfig(currentPanelSession.id);
+  }
+}
+
+// ── AGENT EDITOR ──
+async function loadAgentConfig(sessionId) {
+  try {
+    const res = await fetch(`${API}/api/agents/${sessionId}`);
+    if (res.ok) {
+      const { config, purpose } = await res.json();
+      currentAgentConfig = config;
+      currentAgentPurpose = purpose || '';
+    } else {
+      currentAgentConfig = { id: sessionId, name: '', skills: [], tools: [], files: [] };
+      currentAgentPurpose = '';
+    }
+    // Load AGENTS.md (constraints)
+    try {
+      const cRes = await fetch(`${API}/api/agents/${sessionId}/agents-md`);
+      if (cRes.ok) {
+        const { content } = await cRes.json();
+        currentAgentConstraints = content || '';
+      }
+    } catch { currentAgentConstraints = ''; }
+    renderAgentSection(currentAgentSection);
+  } catch (err) {
+    console.error('Failed to load agent config:', err);
+  }
+}
+
+function switchAgentSection(section) {
+  currentAgentSection = section;
+  document.querySelectorAll('.agent-sidebar-item').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.section === section);
+  });
+  renderAgentSection(section);
+}
+
+function renderAgentSection(section) {
+  const container = document.getElementById('agentContent');
+  switch (section) {
+    case 'identity':    renderIdentitySection(container); break;
+    case 'constraints': renderConstraintsSection(container); break;
+    case 'skills':      renderSkillsSection(container); break;
+    case 'tools':       renderTagSection(container, 'tools'); break;
+    case 'files':       renderFilesSection(container); break;
+    case 'knowledge':   renderKnowledgeSection(container); break;
+    case 'memory':      renderMemorySection(container); break;
+    case 'audit':       renderAuditSection(container); break;
+  }
+}
+
+// ── Identity Section (CLAUDE.md) ──
+function renderIdentitySection(container) {
+  container.innerHTML = `
+    <div class="agent-section-title">Identity</div>
+    <div class="agent-section-desc">CLAUDE.md &mdash; who this agent is. Saved automatically.</div>
+    <textarea class="agent-purpose-textarea" id="purposeTextarea" placeholder="Define the agent's identity, role, and scope...">${escapeHtml(currentAgentPurpose)}</textarea>
+  `;
+  const textarea = document.getElementById('purposeTextarea');
+  textarea.addEventListener('input', () => {
+    currentAgentPurpose = textarea.value;
+    clearTimeout(purposeSaveTimer);
+    purposeSaveTimer = setTimeout(() => {
+      fetch(`${API}/api/agents/${currentPanelSession.id}/purpose`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content: textarea.value }),
+      });
+    }, 800);
+  });
+}
+
+// ── Constraints Section (AGENTS.md) ──
+function renderConstraintsSection(container) {
+  container.innerHTML = `
+    <div class="agent-section-title">Constraints</div>
+    <div class="agent-section-desc">AGENTS.md &mdash; operational rules, workflows, guardrails. Saved automatically.</div>
+    <textarea class="agent-purpose-textarea" id="constraintsTextarea" placeholder="Define operational constraints, messaging rules, execution workflows...">${escapeHtml(currentAgentConstraints)}</textarea>
+  `;
+  const textarea = document.getElementById('constraintsTextarea');
+  textarea.addEventListener('input', () => {
+    currentAgentConstraints = textarea.value;
+    clearTimeout(constraintsSaveTimer);
+    constraintsSaveTimer = setTimeout(() => {
+      fetch(`${API}/api/agents/${currentPanelSession.id}/agents-md`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content: textarea.value }),
+      });
+    }, 800);
+  });
+}
+
+// ── Memory Section ──
+async function renderMemorySection(container) {
+  container.innerHTML = `<div class="agent-section-title">Memory</div><div class="agent-section-desc">Persistent structured memory (memory.jsonl)</div><div class="memory-empty">Loading...</div>`;
+  try {
+    const res = await fetch(`${API}/api/agents/${currentPanelSession.id}/memory`);
+    const entries = await res.json();
+    if (!entries.length) {
+      container.innerHTML = `<div class="agent-section-title">Memory</div><div class="agent-section-desc">Persistent structured memory (memory.jsonl)</div><div class="memory-empty">No memory entries yet. The agent will log conventions, corrections, and decisions here.</div>`;
+      return;
+    }
+    const html = entries.map(e => `
+      <div class="memory-entry">
+        <span class="memory-badge ${e.type || ''}">${escapeHtml(e.type || 'note')}</span>
+        <span class="memory-content">${escapeHtml(e.content || '')}</span>
+        <span class="memory-ts">${e.ts ? new Date(e.ts).toLocaleString() : ''}</span>
+      </div>
+    `).join('');
+    container.innerHTML = `<div class="agent-section-title">Memory</div><div class="agent-section-desc">Persistent structured memory (memory.jsonl)</div>${html}`;
+  } catch {
+    container.innerHTML = `<div class="agent-section-title">Memory</div><div class="memory-empty">Failed to load memory.</div>`;
+  }
+}
+
+// ── Audit Section ──
+async function renderAuditSection(container) {
+  container.innerHTML = `<div class="agent-section-title">Audit</div><div class="agent-section-desc">Action trail (audit.jsonl)</div><div class="audit-empty">Loading...</div>`;
+  try {
+    const res = await fetch(`${API}/api/agents/${currentPanelSession.id}/audit`);
+    const entries = await res.json();
+    if (!entries.length) {
+      container.innerHTML = `<div class="agent-section-title">Audit</div><div class="agent-section-desc">Action trail (audit.jsonl)</div><div class="audit-empty">No audit entries yet.</div>`;
+      return;
+    }
+    const html = entries.map(e => {
+      const detail = e.detail ? Object.entries(e.detail).map(([k,v]) => `${k}: ${v}`).join(', ') : '';
+      return `
+        <div class="audit-entry">
+          <span class="audit-badge ${e.event || ''}">${escapeHtml(e.event || 'unknown')}</span>
+          <span class="audit-content">${escapeHtml(detail)}</span>
+          <span class="audit-ts">${e.ts ? new Date(e.ts).toLocaleString() : ''}</span>
+        </div>
+      `;
+    }).join('');
+    container.innerHTML = `<div class="agent-section-title">Audit</div><div class="agent-section-desc">Action trail (audit.jsonl)</div>${html}`;
+  } catch {
+    container.innerHTML = `<div class="agent-section-title">Audit</div><div class="audit-empty">Failed to load audit log.</div>`;
+  }
+}
+
+// ── Skills Section (from .claude/skills/) ──
+let currentSkillsList = [];
+let currentSkillViewing = null;
+
+function renderSkillsSection(container) {
+  container.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+      <div class="agent-section-title" style="margin:0;">Skills</div>
+      <button class="agent-tag-add" onclick="showAddSkillForm()">+ Add</button>
+    </div>
+    <div class="agent-section-desc">Installed in .claude/skills/</div>
+    <div id="skillsList">Loading...</div>
+  `;
+  loadSkillsList();
+}
+
+async function loadSkillsList() {
+  if (!currentPanelSession) return;
+  const res = await fetch(`${API}/api/agents/${currentPanelSession.id}/skills`);
+  currentSkillsList = await res.json();
+  const listEl = document.getElementById('skillsList');
+  if (!listEl) return;
+
+  if (currentSkillsList.length === 0) {
+    listEl.innerHTML = '<div style="color:var(--text-faint);font-size:0.72rem;">No skills installed</div>';
+    return;
+  }
+
+  listEl.innerHTML = currentSkillsList.map(s => `
+    <div class="agent-file-item" style="cursor:pointer;" onclick="viewSkill('${escapeHtml(s.folder)}')">
+      <span class="agent-file-name" style="color:var(--text);">${escapeHtml(s.name)}</span>
+      <span style="font-size:0.62rem;color:var(--text-faint);flex-shrink:0;max-width:50%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHtml(s.description)}</span>
+    </div>
+  `).join('');
+}
+
+function showAddSkillForm() {
+  const container = document.getElementById('agentContent');
+  container.innerHTML = `
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">
+      <button class="file-toast-btn" onclick="renderSkillsSection(document.getElementById('agentContent'))" style="color:var(--green-dim);">&larr; Back</button>
+      <div class="agent-section-title" style="margin:0;">Add Skill</div>
+    </div>
+
+    <div id="addSkillTabs" style="display:flex;gap:0;margin-bottom:16px;">
+      <button class="panel-tab active" data-mode="command" onclick="switchAddSkillMode('command')" style="flex:1;">From command</button>
+      <button class="panel-tab" data-mode="manual" onclick="switchAddSkillMode('manual')" style="flex:1;">Create manually</button>
+    </div>
+
+    <div id="addSkillCommand">
+      <div class="agent-section-desc" style="margin-bottom:10px;">Paste an install command. It will run in this agent's terminal.</div>
+      <textarea class="agent-purpose-textarea" id="skillCmdInput" style="min-height:48px;max-height:80px;resize:vertical;" placeholder="npx skills add https://github.com/... --skill skill-name"></textarea>
+      <button class="file-toast-btn" style="margin-top:10px;color:var(--green-dim);border-color:var(--green-dim);padding:6px 16px;" onclick="runSkillCommand()">Run in terminal</button>
+    </div>
+
+    <div id="addSkillManual" style="display:none;">
+      <div class="agent-section-desc" style="margin-bottom:10px;">Create a new skill folder with a SKILL.md file.</div>
+      <label style="font-size:0.68rem;color:var(--text-faint);display:block;margin-bottom:4px;">Folder name</label>
+      <input class="agent-tag-input" id="skillNameInput" style="width:100%;margin-bottom:12px;box-sizing:border-box;" placeholder="my-skill-name" />
+      <label style="font-size:0.68rem;color:var(--text-faint);display:block;margin-bottom:4px;">SKILL.md content</label>
+      <textarea class="agent-purpose-textarea" id="skillContentInput" style="min-height:200px;" placeholder="---\nname: my-skill\ndescription: What this skill does\n---\n\n# My Skill\n\n..."></textarea>
+      <button class="file-toast-btn" style="margin-top:10px;color:var(--green-dim);border-color:var(--green-dim);padding:6px 16px;" onclick="createSkillManually()">Create skill</button>
+    </div>
+  `;
+}
+
+function switchAddSkillMode(mode) {
+  document.querySelectorAll('#addSkillTabs .panel-tab').forEach(t => t.classList.toggle('active', t.dataset.mode === mode));
+  document.getElementById('addSkillCommand').style.display = mode === 'command' ? '' : 'none';
+  document.getElementById('addSkillManual').style.display = mode === 'manual' ? '' : 'none';
+}
+
+function runSkillCommand() {
+  const cmd = document.getElementById('skillCmdInput').value.trim();
+  if (!cmd || !activeTerminal?.ws || activeTerminal.ws.readyState !== WebSocket.OPEN) return;
+  activeTerminal.ws.send(JSON.stringify({ type: 'input', data: cmd + '\r' }));
+  // Switch to terminal tab so user can see it running
+  switchPanelTab('terminal');
+}
+
+async function createSkillManually() {
+  const name = document.getElementById('skillNameInput').value.trim();
+  const content = document.getElementById('skillContentInput').value;
+  if (!name || !currentPanelSession) return;
+  const folder = name.replace(/[^a-zA-Z0-9_-]/g, '-').toLowerCase();
+  await fetch(`${API}/api/agents/${currentPanelSession.id}/skills/${encodeURIComponent(folder)}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ content }),
+  });
+  renderSkillsSection(document.getElementById('agentContent'));
+}
+
+async function viewSkill(folder) {
+  if (!currentPanelSession) return;
+  const res = await fetch(`${API}/api/agents/${currentPanelSession.id}/skills/${encodeURIComponent(folder)}`);
+  const { content } = await res.json();
+  currentSkillViewing = folder;
+
+  const container = document.getElementById('agentContent');
+  container.innerHTML = `
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">
+      <button class="file-toast-btn" onclick="renderSkillsSection(document.getElementById('agentContent'))" style="color:var(--green-dim);">&larr; Back</button>
+      <div class="agent-section-title" style="margin:0;">${escapeHtml(folder)}</div>
+    </div>
+    <div class="agent-section-desc">Editing .claude/skills/${escapeHtml(folder)}/SKILL.md</div>
+    <textarea class="agent-purpose-textarea" id="skillTextarea" style="min-height:300px;">${escapeHtml(content)}</textarea>
+  `;
+
+  const textarea = document.getElementById('skillTextarea');
+  let skillSaveTimer;
+  textarea.addEventListener('input', () => {
+    clearTimeout(skillSaveTimer);
+    skillSaveTimer = setTimeout(() => {
+      fetch(`${API}/api/agents/${currentPanelSession.id}/skills/${encodeURIComponent(folder)}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content: textarea.value }),
+      });
+    }, 800);
+  });
+}
+
+// ── Skills / Tools Tag Sections ──
+function renderTagSection(container, field) {
+  const items = currentAgentConfig[field] || [];
+  const label = field.charAt(0).toUpperCase() + field.slice(1);
+  container.innerHTML = `
+    <div class="agent-section-title">${label}</div>
+    <div class="agent-section-desc">Click + to add, x to remove.</div>
+    <div class="agent-tags" id="agentTags-${field}">
+      ${items.map(item => `
+        <span class="agent-tag">
+          ${escapeHtml(item)}
+          <span class="agent-tag-remove" onclick="removeTag('${field}', '${escapeHtml(item)}')">&times;</span>
+        </span>
+      `).join('')}
+      <button class="agent-tag-add" id="addTagBtn-${field}" onclick="showTagInput('${field}')">+ Add</button>
+    </div>
+  `;
+}
+
+function showTagInput(field) {
+  const btn = document.getElementById(`addTagBtn-${field}`);
+  const input = document.createElement('input');
+  input.className = 'agent-tag-input';
+  input.placeholder = `Add ${field.slice(0, -1)}...`;
+  btn.replaceWith(input);
+  input.focus();
+
+  input.addEventListener('keydown', async (e) => {
+    if (e.key === 'Enter') {
+      const value = input.value.trim();
+      if (value && !currentAgentConfig[field].includes(value)) {
+        currentAgentConfig[field].push(value);
+        await saveAgentConfigAPI({ [field]: currentAgentConfig[field] });
+        renderTagSection(document.getElementById('agentContent'), field);
+      }
+    }
+    if (e.key === 'Escape') {
+      renderTagSection(document.getElementById('agentContent'), field);
+    }
+  });
+  input.addEventListener('blur', () => {
+    renderTagSection(document.getElementById('agentContent'), field);
+  });
+}
+
+async function removeTag(field, value) {
+  currentAgentConfig[field] = currentAgentConfig[field].filter(v => v !== value);
+  await saveAgentConfigAPI({ [field]: currentAgentConfig[field] });
+  renderTagSection(document.getElementById('agentContent'), field);
+}
+
+async function saveAgentConfigAPI(updates) {
+  if (!currentPanelSession) return;
+  await fetch(`${API}/api/agents/${currentPanelSession.id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(updates),
+  });
+}
+
+// ── Files Section ──
+function renderFilesSection(container) {
+  const files = currentAgentConfig.files || [];
+  container.innerHTML = `
+    <div class="agent-section-title">Files</div>
+    <div class="agent-section-desc">Files produced by this agent. Auto-detected from terminal + manually added.</div>
+    <div id="agentFileList">
+      ${files.length === 0 ? '<div style="color:var(--text-faint);font-size:0.72rem;">No files tracked yet</div>' : ''}
+      ${files.map(f => {
+        const name = f.split('/').pop();
+        return `
+          <div class="agent-file-item">
+            <span class="agent-file-name" title="${escapeHtml(f)}">${escapeHtml(name)}</span>
+            <div class="agent-file-actions">
+              <button class="file-toast-btn" onclick="openAgentFile('${escapeHtml(f)}', 'file')">Open</button>
+              <button class="file-toast-btn" onclick="openAgentFile('${escapeHtml(f)}', 'folder')">Finder</button>
+              <button class="file-toast-btn" onclick="removeAgentFile('${escapeHtml(f)}')" style="color:var(--red);">&times;</button>
+            </div>
+          </div>
+        `;
+      }).join('')}
+    </div>
+    <div style="margin-top:12px;">
+      <button class="agent-tag-add" onclick="showAddFileInput()">+ Add file path</button>
+    </div>
+  `;
+}
+
+async function openAgentFile(path, action) {
+  await fetch(`${API}/api/open`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ path, action }),
+  });
+}
+
+async function removeAgentFile(path) {
+  if (!currentPanelSession) return;
+  await fetch(`${API}/api/agents/${currentPanelSession.id}/files`, {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ path }),
+  });
+  currentAgentConfig.files = currentAgentConfig.files.filter(f => f !== path);
+  renderFilesSection(document.getElementById('agentContent'));
+}
+
+function showAddFileInput() {
+  const container = document.getElementById('agentContent');
+  const btn = container.querySelector('.agent-tag-add');
+  const input = document.createElement('input');
+  input.className = 'agent-tag-input';
+  input.style.width = '100%';
+  input.placeholder = '/absolute/path/to/file...';
+  btn.replaceWith(input);
+  input.focus();
+
+  input.addEventListener('keydown', async (e) => {
+    if (e.key === 'Enter') {
+      const value = input.value.trim();
+      if (value) {
+        await fetch(`${API}/api/agents/${currentPanelSession.id}/files`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ path: value }),
+        });
+        if (!currentAgentConfig.files.includes(value)) {
+          currentAgentConfig.files.push(value);
+        }
+        renderFilesSection(document.getElementById('agentContent'));
+      }
+    }
+    if (e.key === 'Escape') {
+      renderFilesSection(document.getElementById('agentContent'));
+    }
+  });
+}
+
+// ── Knowledge Section ──
+function renderKnowledgeSection(container) {
+  container.innerHTML = `
+    <div class="agent-section-title">Knowledge Base</div>
+    <div class="agent-section-desc">Upload reference files for this agent.</div>
+    <div id="agentKbList">Loading...</div>
+    <div class="agent-kb-upload" id="kbUploadZone">
+      Drop files here or <label style="color:var(--green-dim);cursor:pointer;text-decoration:underline;">
+        <input type="file" id="kbFileInput" style="display:none" multiple>click to upload
+      </label>
+    </div>
+  `;
+
+  const zone = document.getElementById('kbUploadZone');
+  zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
+  zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+  zone.addEventListener('drop', async e => {
+    e.preventDefault();
+    zone.classList.remove('drag-over');
+    for (const file of Array.from(e.dataTransfer.files)) {
+      await uploadKbFile(file);
+    }
+  });
+
+  document.getElementById('kbFileInput').addEventListener('change', async function() {
+    for (const file of Array.from(this.files)) {
+      await uploadKbFile(file);
+    }
+  });
+
+  loadKnowledgeList();
+}
+
+async function loadKnowledgeList() {
+  if (!currentPanelSession) return;
+  const res = await fetch(`${API}/api/agents/${currentPanelSession.id}/knowledge`);
+  const files = await res.json();
+  const listEl = document.getElementById('agentKbList');
+  if (!listEl) return;
+
+  if (files.length === 0) {
+    listEl.innerHTML = '<div style="color:var(--text-faint);font-size:0.72rem;">No knowledge files uploaded</div>';
+    return;
+  }
+
+  listEl.innerHTML = files.map(f => `
+    <div class="agent-file-item">
+      <span class="agent-file-name">${escapeHtml(f.name)}</span>
+      <span style="font-size:0.62rem;color:var(--text-faint);">${formatBytes(f.size)}</span>
+      <div class="agent-file-actions">
+        <button class="file-toast-btn" onclick="openAgentFile('${escapeHtml(f.path)}', 'file')">Open</button>
+        <button class="file-toast-btn" onclick="deleteKbFile('${escapeHtml(f.name)}')" style="color:var(--red);">&times;</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+async function uploadKbFile(file) {
+  if (!currentPanelSession) return;
+  const form = new FormData();
+  form.append('file', file);
+  await fetch(`${API}/api/agents/${currentPanelSession.id}/knowledge`, {
+    method: 'POST',
+    body: form,
+  });
+  loadKnowledgeList();
+}
+
+async function deleteKbFile(filename) {
+  if (!currentPanelSession) return;
+  await fetch(`${API}/api/agents/${currentPanelSession.id}/knowledge/${encodeURIComponent(filename)}`, {
+    method: 'DELETE',
+  });
+  loadKnowledgeList();
+}
+
+function formatBytes(bytes) {
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+  return (bytes / 1048576).toFixed(1) + ' MB';
+}
+
+// ── VIEW SWITCHING ──
+function switchView(view) {
+  currentView = view;
+  document.querySelectorAll('.header-nav-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.view === view);
+  });
+  document.getElementById('board').style.display = view === 'board' ? '' : 'none';
+  document.getElementById('agentsView').style.display = view === 'agents' ? '' : 'none';
+  document.getElementById('toolsView').style.display = view === 'tools' ? '' : 'none';
+  const btnText = view === 'board' ? '+ New Task' : view === 'agents' ? '+ New Agent' : '+ Add Tool';
+  document.getElementById('headerActionBtn').textContent = btnText;
+  if (view === 'agents') {
+    fetchTemplates().then(() => renderAgentsView());
+  }
+  if (view === 'tools') {
+    selectedToolId = null;
+    document.getElementById('toolsDetailPanel').style.display = 'none';
+    renderToolsView();
+  }
+}
+
+function headerAction() {
+  if (currentView === 'board') openModal();
+  else if (currentView === 'agents') openCreateTemplateModal();
+  else if (currentView === 'tools') {
+    const input = document.getElementById('toolsSearch');
+    input.focus();
+  }
+}
+
+// ── TOOLS VIEW ──
+let selectedToolId = null;
+
+function renderToolsView() {
+  const catalog = connectorCatalog || {};
+  const search = (document.getElementById('toolsSearch')?.value || '').toLowerCase();
+  const grid = document.getElementById('toolsGrid');
+
+  // Group by category
+  const categories = {};
+  for (const conn of Object.values(catalog)) {
+    const name = conn.name.toLowerCase();
+    const desc = (conn.description || '').toLowerCase();
+    if (search && !name.includes(search) && !desc.includes(search)) continue;
+    const cat = conn.category || 'other';
+    if (!categories[cat]) categories[cat] = [];
+    categories[cat].push(conn);
+  }
+
+  if (!Object.keys(categories).length) {
+    grid.innerHTML = '<div style="padding:24px;text-align:center;color:var(--text-dim);font-size:0.72rem;">No tools found</div>';
+    return;
+  }
+
+  const categoryOrder = ['sales', 'communication', 'productivity', 'marketing', 'dev-tools'];
+  const sorted = Object.keys(categories).sort((a, b) => {
+    const ai = categoryOrder.indexOf(a), bi = categoryOrder.indexOf(b);
+    return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
+  });
+
+  let html = '';
+  for (const cat of sorted) {
+    html += `<div class="tools-category-label">${escapeHtml(cat)}</div>`;
+    for (const conn of categories[cat]) {
+      const expanded = selectedToolId === conn.id ? ' expanded' : '';
+      html += `<div class="tools-card${expanded}" data-connector-id="${conn.id}" onclick="openToolDetail('${conn.id}')">
+        <span class="tool-icon">${escapeHtml(conn.icon)}</span>
+        <span class="tool-name">${escapeHtml(conn.name)}</span>
+        <span class="tool-desc">${escapeHtml(conn.description || '')}</span>
+        <span class="tool-badge">${conn.actions.length} action${conn.actions.length !== 1 ? 's' : ''}</span>
+        <span class="tool-chevron">&#x25B8;</span>
+      </div>`;
+    }
+  }
+  grid.innerHTML = html;
+}
+
+function openToolDetail(connectorId) {
+  const catalog = connectorCatalog || {};
+  const conn = catalog[connectorId];
+  if (!conn) return;
+
+  // Toggle off if same card clicked
+  if (selectedToolId === connectorId) {
+    closeToolDetail();
+    return;
+  }
+
+  selectedToolId = connectorId;
+
+  // Update card highlights
+  document.querySelectorAll('.tools-card').forEach(el => {
+    el.classList.toggle('expanded', el.dataset.connectorId === connectorId);
+  });
+  document.querySelectorAll('.tools-card .tool-chevron').forEach(el => {
+    // chevron rotation handled by CSS .expanded class
+  });
+
+  const panel = document.getElementById('toolsDetailPanel');
+  let html = `<div class="tools-detail-header">
+    <span class="tool-icon">${escapeHtml(conn.icon)}</span>
+    <span class="tool-name">${escapeHtml(conn.name)}</span>
+    <span class="tool-desc">${escapeHtml(conn.description || '')}</span>
+  </div>`;
+  for (const action of conn.actions) {
+    html += `<div class="tools-action-row">
+      <span class="action-name">${escapeHtml(action.name)}</span>
+      <span class="action-mcp" title="${escapeHtml(action.mcpTool)}">${escapeHtml(action.mcpTool)}</span>
+    </div>`;
+  }
+  panel.innerHTML = html;
+  panel.style.display = 'block';
+
+  // Scroll panel into view
+  panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function closeToolDetail() {
+  selectedToolId = null;
+  document.querySelectorAll('.tools-card').forEach(el => el.classList.remove('expanded'));
+  document.getElementById('toolsDetailPanel').style.display = 'none';
+}
+
+// ── CONNECTOR MANAGEMENT ──
+let tplConnectorEntries = []; // TemplateConnectorConfig[]
+let connectorCatalog = null;  // cached from backend
+let selectedConnectorIndex = -1;
+
+async function loadConnectorCatalog() {
+  if (connectorCatalog) return connectorCatalog;
+  try {
+    const res = await fetch(`${API}/api/connectors/catalog`);
+    connectorCatalog = await res.json();
+  } catch { connectorCatalog = {}; }
+  return connectorCatalog;
+}
+
+function renderConnectorChips() {
+  const container = document.getElementById('tplConnectorChips');
+  if (!tplConnectorEntries.length) { container.innerHTML = ''; return; }
+  const catalog = connectorCatalog || {};
+  container.innerHTML = tplConnectorEntries.map((cfg, i) => {
+    const conn = catalog[cfg.connectorId];
+    if (!conn) return '';
+    const total = conn.actions.length;
+    const enabled = cfg.allEnabled ? total : (cfg.enabledActions?.length || 0);
+    const sel = i === selectedConnectorIndex ? ' selected' : '';
+    return `<div class="connector-chip${sel}" data-index="${i}">
+      <span class="chip-icon">${escapeHtml(conn.icon)}</span>
+      <span class="chip-name" onclick="openConnectorDetail(${i})">${escapeHtml(conn.name)}</span>
+      <span class="chip-count">${enabled}/${total}</span>
+      <span class="chip-remove" onclick="event.stopPropagation();removeConnectorChip(${i})">&times;</span>
+    </div>`;
+  }).join('');
+  refreshConnectorPickerStates();
+}
+
+function removeConnectorChip(index) {
+  tplConnectorEntries.splice(index, 1);
+  if (selectedConnectorIndex === index) closeConnectorDetail();
+  else if (selectedConnectorIndex > index) selectedConnectorIndex--;
+  renderConnectorChips();
+}
+
+function addConnector(connectorId) {
+  if (tplConnectorEntries.some(c => c.connectorId === connectorId)) return;
+  const catalog = connectorCatalog || {};
+  const conn = catalog[connectorId];
+  if (!conn) return;
+  const cfg = {
+    connectorId,
+    enabledActions: conn.actions.map(a => a.id),
+    allEnabled: true,
+  };
+  tplConnectorEntries.push(cfg);
+  renderConnectorChips();
+  openConnectorDetail(tplConnectorEntries.length - 1);
+}
+
+function openConnectorDetail(index) {
+  const cfg = tplConnectorEntries[index];
+  if (!cfg) return;
+  const catalog = connectorCatalog || {};
+  const conn = catalog[cfg.connectorId];
+  if (!conn) return;
+  selectedConnectorIndex = index;
+  renderConnectorChips();
+  const panel = document.getElementById('connectorDetailPanel');
+  const allOn = cfg.allEnabled || cfg.enabledActions?.length === conn.actions.length;
+  let html = `
+    <button class="connector-detail-close" onclick="closeConnectorDetail()">&times;</button>
+    <div class="connector-detail-header">
+      <span class="chip-icon">${escapeHtml(conn.icon)}</span>
+      <span class="connector-detail-name">${escapeHtml(conn.name)}</span>
+      <span class="connector-detail-desc">${escapeHtml(conn.description)}</span>
+    </div>
+    <div class="connector-toggle-all">
+      <span>Enable all actions</span>
+      <label class="connector-toggle">
+        <input type="checkbox" ${allOn ? 'checked' : ''} onchange="toggleAllConnectorActions(${index}, this.checked)">
+        <span class="toggle-track"></span>
+      </label>
+    </div>`;
+  for (const action of conn.actions) {
+    const checked = cfg.allEnabled || cfg.enabledActions?.includes(action.id);
+    html += `<div class="connector-action-row">
+      <span class="action-name">${escapeHtml(action.name)}</span>
+      <span class="action-mcp" title="${escapeHtml(action.mcpTool)}">${escapeHtml(action.mcpTool)}</span>
+      <label class="connector-toggle">
+        <input type="checkbox" ${checked ? 'checked' : ''} onchange="toggleConnectorAction(${index}, '${action.id}', this.checked)">
+        <span class="toggle-track"></span>
+      </label>
+    </div>`;
+  }
+  panel.innerHTML = html;
+  panel.style.display = 'block';
+}
+
+function closeConnectorDetail() {
+  selectedConnectorIndex = -1;
+  document.getElementById('connectorDetailPanel').style.display = 'none';
+  renderConnectorChips();
+}
+
+function toggleConnectorAction(connIndex, actionId, enabled) {
+  const cfg = tplConnectorEntries[connIndex];
+  if (!cfg) return;
+  const catalog = connectorCatalog || {};
+  const conn = catalog[cfg.connectorId];
+  if (!conn) return;
+  // If was allEnabled, expand to explicit list first
+  if (cfg.allEnabled) {
+    cfg.enabledActions = conn.actions.map(a => a.id);
+    cfg.allEnabled = false;
+  }
+  if (enabled) {
+    if (!cfg.enabledActions.includes(actionId)) cfg.enabledActions.push(actionId);
+  } else {
+    cfg.enabledActions = cfg.enabledActions.filter(id => id !== actionId);
+  }
+  // Check if all are now enabled
+  if (cfg.enabledActions.length === conn.actions.length) cfg.allEnabled = true;
+  renderConnectorChips();
+  // Update toggle-all checkbox without full re-render of detail
+  const panel = document.getElementById('connectorDetailPanel');
+  const toggleAll = panel.querySelector('.connector-toggle-all input');
+  if (toggleAll) toggleAll.checked = cfg.allEnabled;
+}
+
+function toggleAllConnectorActions(connIndex, enabled) {
+  const cfg = tplConnectorEntries[connIndex];
+  if (!cfg) return;
+  const catalog = connectorCatalog || {};
+  const conn = catalog[cfg.connectorId];
+  if (!conn) return;
+  if (enabled) {
+    cfg.enabledActions = conn.actions.map(a => a.id);
+    cfg.allEnabled = true;
+  } else {
+    cfg.enabledActions = [];
+    cfg.allEnabled = false;
+  }
+  // Re-render detail to update individual toggles
+  openConnectorDetail(connIndex);
+}
+
+function renderConnectorCatalog() {
+  const catalog = connectorCatalog || {};
+  const search = (document.getElementById('connectorSearch')?.value || '').toLowerCase();
+  const container = document.getElementById('connectorCatalog');
+  const addedIds = new Set(tplConnectorEntries.map(c => c.connectorId));
+
+  // Group by category
+  const categories = {};
+  for (const conn of Object.values(catalog)) {
+    const name = conn.name.toLowerCase();
+    const desc = (conn.description || '').toLowerCase();
+    if (search && !name.includes(search) && !desc.includes(search)) continue;
+    const cat = conn.category || 'other';
+    if (!categories[cat]) categories[cat] = [];
+    categories[cat].push(conn);
+  }
+
+  if (!Object.keys(categories).length) {
+    container.innerHTML = '<div class="connector-picker-empty">No connectors found</div>';
+    return;
+  }
+
+  const categoryOrder = ['sales', 'communication', 'productivity', 'marketing', 'dev-tools'];
+  const sorted = Object.keys(categories).sort((a, b) => {
+    const ai = categoryOrder.indexOf(a), bi = categoryOrder.indexOf(b);
+    return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
+  });
+
+  let html = '';
+  for (const cat of sorted) {
+    html += `<div class="connector-category-header">${escapeHtml(cat)}</div>`;
+    for (const conn of categories[cat]) {
+      const added = addedIds.has(conn.id) ? ' added' : '';
+      html += `<div class="connector-picker-item${added}" onclick="addConnector('${conn.id}')">
+        <span class="picker-icon">${escapeHtml(conn.icon)}</span>
+        <span class="picker-name">${escapeHtml(conn.name)}</span>
+        <span class="picker-desc">${escapeHtml(conn.description)}</span>
+        <span class="picker-badge">${conn.actions.length} actions</span>
+      </div>`;
+    }
+  }
+  container.innerHTML = html;
+}
+
+function refreshConnectorPickerStates() {
+  const addedIds = new Set(tplConnectorEntries.map(c => c.connectorId));
+  document.querySelectorAll('#connectorCatalog .connector-picker-item').forEach(el => {
+    const id = el.getAttribute('onclick')?.match(/addConnector\('(.+?)'\)/)?.[1];
+    if (id) el.classList.toggle('added', addedIds.has(id));
+  });
+}
+
+function migrateToolsToConnectors(tools) {
+  if (!tools?.length || !connectorCatalog) return [];
+  const entries = [];
+  const catalog = connectorCatalog;
+  // Try to match tool strings to MCP tool names in catalog
+  for (const conn of Object.values(catalog)) {
+    const matchedActions = [];
+    for (const action of conn.actions) {
+      if (tools.includes(action.mcpTool) || tools.includes(action.id)) {
+        matchedActions.push(action.id);
+      }
+    }
+    if (matchedActions.length) {
+      entries.push({
+        connectorId: conn.id,
+        enabledActions: matchedActions,
+        allEnabled: matchedActions.length === conn.actions.length,
+      });
+    }
+  }
+  return entries;
+}
+
+// ── TEMPLATE API ──
+async function fetchTemplates() {
+  try {
+    const res = await fetch(`${API}/api/templates`);
+    templates = await res.json();
+  } catch { templates = []; }
+}
+
+function renderAgentsView() {
+  const grid = document.getElementById('agentsGrid');
+  const addCard = `
+    <div class="agent-template-add" onclick="openCreateTemplateModal()">
+      <div class="tpl-add-icon">+</div>
+      <div class="tpl-add-label">New Agent</div>
+    </div>
+  `;
+  const templateCards = templates.map(t => {
+    const purposePreview = (t.identity || t.purpose || '').replace(/[#*_`]/g, '').slice(0, 200);
+    const connectorTags = (t.connectors || []).map(c => {
+      const cat = connectorCatalog?.[c.connectorId];
+      return cat ? cat.name : c.connectorId;
+    });
+    const allTags = [
+      ...(t.skills || []).map(s => `skill:${typeof s === 'string' ? s : s.name}`),
+      ...connectorTags,
+      ...(t.connectors?.length ? [] : (t.tools || [])),
+    ];
+    return `
+      <div class="agent-template-card">
+        <div class="tpl-name">${escapeHtml(t.name)}</div>
+        <div class="tpl-cwd">${escapeHtml(t.defaultCwd || 'No default directory')}</div>
+        <div class="tpl-purpose">${escapeHtml(purposePreview) || 'No purpose defined'}</div>
+        ${allTags.length ? `<div class="tpl-tags">${allTags.map(tag => `<span class="tpl-tag">${escapeHtml(tag)}</span>`).join('')}</div>` : ''}
+        <div class="tpl-actions">
+          <button class="tpl-launch" onclick="launchFromTemplate('${t.id}')">Launch</button>
+          <button onclick="openEditTemplateModal('${t.id}')">Edit</button>
+          <button class="tpl-delete" onclick="deleteTemplateConfirm('${t.id}')">Delete</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+  grid.innerHTML = addCard + templateCards;
+}
+
+function openCreateTemplateModal() {
+  editingTemplateId = null;
+  document.getElementById('templateModalTitle').textContent = 'new agent template';
+  document.getElementById('templateModalSubtitle').textContent = 'Create a reusable agent configuration';
+  document.getElementById('tplName').value = '';
+  document.getElementById('tplCwd').value = '';
+  document.getElementById('tplIdentity').value = '';
+  document.getElementById('tplConstraints').value = '';
+  tplSkillEntries = [];
+  skillChipsExpanded = false;
+  selectedSkillIndex = -1;
+  document.getElementById('skillDetailPanel').style.display = 'none';
+  localSkillsLoaded = false;
+  externalSkillsLoaded = false;
+  renderSkillChips();
+  switchSkillInputMode('paste');
+  document.getElementById('skillPasteInput').value = '';
+  // Reset connectors
+  tplConnectorEntries = [];
+  selectedConnectorIndex = -1;
+  document.getElementById('connectorDetailPanel').style.display = 'none';
+  document.getElementById('connectorSearch').value = '';
+  loadConnectorCatalog().then(() => { renderConnectorChips(); renderConnectorCatalog(); });
+  document.getElementById('tplSubmitBtn').textContent = 'Create';
+  document.getElementById('templateModalOverlay').classList.add('open');
+  setTimeout(() => document.getElementById('tplName').focus(), 100);
+  setupTemplateModalKeys();
+}
+
+async function openEditTemplateModal(id) {
+  const t = templates.find(tpl => tpl.id === id);
+  if (!t) return;
+  editingTemplateId = id;
+  document.getElementById('templateModalTitle').textContent = 'edit template';
+  document.getElementById('templateModalSubtitle').textContent = `Editing: ${t.name}`;
+  document.getElementById('tplName').value = t.name || '';
+  document.getElementById('tplCwd').value = t.defaultCwd || '';
+  document.getElementById('tplIdentity').value = t.identity || t.purpose || '';
+  document.getElementById('tplConstraints').value = t.constraints || '';
+  tplSkillEntries = normalizeSkills(t.skills || []);
+  skillChipsExpanded = false;
+  selectedSkillIndex = -1;
+  document.getElementById('skillDetailPanel').style.display = 'none';
+  localSkillsLoaded = false;
+  externalSkillsLoaded = false;
+  renderSkillChips();
+  switchSkillInputMode('paste');
+  document.getElementById('skillPasteInput').value = '';
+  // Load connectors from template (or migrate old tools)
+  selectedConnectorIndex = -1;
+  document.getElementById('connectorDetailPanel').style.display = 'none';
+  document.getElementById('connectorSearch').value = '';
+  loadConnectorCatalog().then(() => {
+    if (t.connectors?.length) {
+      tplConnectorEntries = JSON.parse(JSON.stringify(t.connectors));
+    } else {
+      tplConnectorEntries = migrateToolsToConnectors(t.tools || []);
+    }
+    renderConnectorChips();
+    renderConnectorCatalog();
+  });
+  document.getElementById('tplSubmitBtn').textContent = 'Save';
+  document.getElementById('templateModalOverlay').classList.add('open');
+  setTimeout(() => document.getElementById('tplName').focus(), 100);
+  setupTemplateModalKeys();
+}
+
+function setupTemplateModalKeys() {
+  const nameInput = document.getElementById('tplName');
+  nameInput.onkeydown = e => {
+    if (e.key === 'Escape') closeTemplateModal();
+  };
+  // Setup autocomplete for template cwd
+  const cwdInput = document.getElementById('tplCwd');
+  let tplDebounce;
+  cwdInput.oninput = () => {
+    clearTimeout(tplDebounce);
+    tplDebounce = setTimeout(async () => {
+      const suggestions = await fetchAutocomplete(cwdInput.value);
+      renderTplAutocomplete(suggestions);
+    }, 200);
+  };
+  cwdInput.onkeydown = e => {
+    if (e.key === 'Escape') { document.getElementById('tplAutocompleteList').classList.remove('visible'); }
+    if (e.key === 'Tab') {
+      e.preventDefault();
+      const items = document.getElementById('tplAutocompleteList').querySelectorAll('.autocomplete-item');
+      if (items.length === 1) {
+        cwdInput.value = items[0].dataset.path + '/';
+        document.getElementById('tplAutocompleteList').classList.remove('visible');
+        cwdInput.dispatchEvent(new Event('input'));
+      }
+    }
+  };
+}
+
+function renderTplAutocomplete(suggestions) {
+  const list = document.getElementById('tplAutocompleteList');
+  if (suggestions.length === 0) { list.classList.remove('visible'); return; }
+  list.innerHTML = suggestions.map(s =>
+    `<div class="autocomplete-item" data-path="${escapeHtml(s)}" onclick="selectTplAutocomplete(this)">${escapeHtml(s)}</div>`
+  ).join('');
+  list.classList.add('visible');
+}
+
+function selectTplAutocomplete(el) {
+  const input = document.getElementById('tplCwd');
+  input.value = el.dataset.path + '/';
+  document.getElementById('tplAutocompleteList').classList.remove('visible');
+  input.focus();
+  input.dispatchEvent(new Event('input'));
+}
+
+function toggleModalExpand() {
+  const modal = document.getElementById('templateModal');
+  const btn = document.getElementById('modalExpandBtn');
+  modal.classList.toggle('expanded');
+  const isExpanded = modal.classList.contains('expanded');
+  btn.title = isExpanded ? 'Collapse' : 'Expand';
+  btn.innerHTML = isExpanded ? '&#x2716;' : '&#x26F6;';
+  if (isExpanded) modal.style.width = '';
+}
+
+function closeTemplateModal() {
+  document.getElementById('templateModalOverlay').classList.remove('open');
+  document.getElementById('tplAutocompleteList').classList.remove('visible');
+  const modal = document.getElementById('templateModal');
+  modal.classList.remove('expanded');
+  modal.style.width = '460px';
+  document.getElementById('modalExpandBtn').innerHTML = '&#x26F6;';
+  document.getElementById('modalExpandBtn').title = 'Expand';
+  editingTemplateId = null;
+  tplConnectorEntries = [];
+  selectedConnectorIndex = -1;
+}
+
+document.getElementById('templateModalOverlay').addEventListener('click', closeTemplateModal);
+
+async function submitTemplate() {
+  const name = document.getElementById('tplName').value.trim();
+  if (!name) return;
+  // Compute flat tools list from connectors for backward compat
+  const connectorTools = [];
+  const catalog = connectorCatalog || {};
+  for (const cfg of tplConnectorEntries) {
+    const conn = catalog[cfg.connectorId];
+    if (!conn) continue;
+    for (const action of conn.actions) {
+      if (cfg.allEnabled || cfg.enabledActions?.includes(action.id)) {
+        connectorTools.push(action.mcpTool);
+      }
+    }
+  }
+  const identityVal = document.getElementById('tplIdentity').value;
+  const constraintsVal = document.getElementById('tplConstraints').value;
+  const data = {
+    name,
+    defaultCwd: document.getElementById('tplCwd').value.trim(),
+    purpose: identityVal,
+    identity: identityVal,
+    constraints: constraintsVal,
+    skills: tplSkillEntries,
+    tools: connectorTools,
+    connectors: tplConnectorEntries,
+  };
+  if (editingTemplateId) {
+    await fetch(`${API}/api/templates/${editingTemplateId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+  } else {
+    await fetch(`${API}/api/templates`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+  }
+  closeTemplateModal();
+  await fetchTemplates();
+  renderAgentsView();
+}
+
+async function deleteTemplateConfirm(id) {
+  const t = templates.find(tpl => tpl.id === id);
+  if (!confirm(`Delete template "${t?.name || id}"?`)) return;
+  await fetch(`${API}/api/templates/${id}`, { method: 'DELETE' });
+  await fetchTemplates();
+  renderAgentsView();
+}
+
+async function browseForTemplate() {
+  const res = await fetch(`${API}/api/browse`);
+  const { path } = await res.json();
+  if (path) {
+    document.getElementById('tplCwd').value = path;
+  }
+}
+
+async function importFromDirectory() {
+  // Use the directory field value, or open native picker if empty
+  let dir = document.getElementById('tplCwd').value.trim();
+  if (!dir) {
+    const res = await fetch(`${API}/api/browse`);
+    const { path } = await res.json();
+    if (!path) return;
+    dir = path;
+    document.getElementById('tplCwd').value = dir;
+  }
+  const btn = document.getElementById('tplImportBtn');
+  btn.textContent = 'Importing...';
+  try {
+    const res = await fetch(`${API}/api/import-agent?path=${encodeURIComponent(dir)}`);
+    const data = await res.json();
+    if (data.name) document.getElementById('tplName').value = data.name;
+    if (data.purpose) document.getElementById('tplIdentity').value = data.purpose;
+    if (data.skills?.length) {
+      data.skills.forEach(s => addSkillEntry({ name: s, source: 'local' }));
+    }
+    if (data.defaultCwd) document.getElementById('tplCwd').value = data.defaultCwd;
+  } catch {}
+  btn.textContent = 'Import';
+}
+
+function launchFromTemplate(id) {
+  const t = templates.find(tpl => tpl.id === id);
+  if (!t) return;
+  pendingTemplateId = id;
+  startSessionCardId = null;
+  document.getElementById('startSessionSubtitle').textContent = `Launch: ${t.name}`;
+  document.getElementById('sessionPath').value = t.defaultCwd || '~/';
+  document.getElementById('startSessionOverlay').classList.add('open');
+  setTimeout(() => document.getElementById('sessionPath').focus(), 100);
+
+  const input = document.getElementById('sessionPath');
+  let debounceTimer;
+  input.oninput = () => {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(async () => {
+      const suggestions = await fetchAutocomplete(input.value);
+      renderAutocomplete(suggestions);
+    }, 200);
+  };
+  input.onkeydown = e => {
+    if (e.key === 'Enter') {
+      const list = document.getElementById('autocompleteList');
+      if (list.classList.contains('visible')) {
+        const selected = list.querySelector('.selected');
+        if (selected) { input.value = selected.dataset.path + '/'; list.classList.remove('visible'); return; }
+      }
+      startSession();
+    }
+    if (e.key === 'Escape') {
+      const list = document.getElementById('autocompleteList');
+      if (list.classList.contains('visible')) { list.classList.remove('visible'); return; }
+      closeStartSessionModal();
+    }
+    if (e.key === 'Tab') {
+      e.preventDefault();
+      const items = document.getElementById('autocompleteList').querySelectorAll('.autocomplete-item');
+      if (items.length === 1) {
+        input.value = items[0].dataset.path + '/';
+        document.getElementById('autocompleteList').classList.remove('visible');
+        input.dispatchEvent(new Event('input'));
+      }
+    }
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      navigateAutocomplete(e.key === 'ArrowDown' ? 1 : -1);
+    }
+  };
+}
+
 // ── BACKLOG MODAL ──
-function openModal() {
+async function openModal() {
+  await fetchTemplates();
+  const select = document.getElementById('taskTemplateSelect');
+  select.innerHTML = '<option value="">-- select agent --</option>' +
+    templates.map(t => `<option value="${t.id}">${escapeHtml(t.name)}</option>`).join('');
   document.getElementById('modalOverlay').classList.add('open');
-  document.getElementById('agentName').value = '';
-  setTimeout(() => document.getElementById('agentName').focus(), 100);
-  document.getElementById('agentName').onkeydown = e => {
-    if (e.key === 'Enter') createAgent();
+  setTimeout(() => select.focus(), 100);
+  select.onkeydown = e => {
+    if (e.key === 'Enter' && select.value) createAgent();
     if (e.key === 'Escape') closeModal();
   };
 }
@@ -1079,9 +4487,15 @@ function closeModal() {
 document.getElementById('modalOverlay').addEventListener('click', closeModal);
 
 function createAgent() {
-  const name = document.getElementById('agentName').value.trim();
-  if (!name) return;
-  backlogTasks.push({ id: 'task-' + nextBacklogId++, name, tag: 'task' });
+  const templateId = document.getElementById('taskTemplateSelect').value || null;
+  if (!templateId) return;
+  const tpl = templates.find(t => t.id === templateId);
+  if (!tpl) return;
+  const now = new Date();
+  const ts = now.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+  const name = `${tpl.name} - ${ts}`;
+  const task = { id: 'task-' + nextBacklogId++, name, tag: tpl.name, templateId };
+  backlogTasks.push(task);
   localStorage.setItem('vt-backlog', JSON.stringify(backlogTasks));
   closeModal();
   render();
@@ -1090,8 +4504,17 @@ function createAgent() {
 // ── START SESSION MODAL ──
 function openStartSessionModal(card) {
   startSessionCardId = card.id;
+  pendingTemplateId = null;
   document.getElementById('startSessionSubtitle').textContent = `Open terminal for: ${card.title}`;
-  document.getElementById('sessionPath').value = '~/';
+  // Pre-fill cwd from task's template if one is assigned
+  const task = backlogTasks.find(t => t.id === card.id);
+  let defaultPath = '~/';
+  if (task?.templateId) {
+    pendingTemplateId = task.templateId;
+    const tpl = templates.find(t => t.id === task.templateId);
+    if (tpl?.defaultCwd) defaultPath = tpl.defaultCwd;
+  }
+  document.getElementById('sessionPath').value = defaultPath;
   document.getElementById('startSessionOverlay').classList.add('open');
   setTimeout(() => document.getElementById('sessionPath').focus(), 100);
 
@@ -1143,6 +4566,7 @@ function closeStartSessionModal() {
   document.getElementById('startSessionOverlay').classList.remove('open');
   document.getElementById('autocompleteList').classList.remove('visible');
   startSessionCardId = null;
+  pendingTemplateId = null;
 }
 
 document.getElementById('startSessionOverlay').addEventListener('click', closeStartSessionModal);
@@ -1177,20 +4601,29 @@ function navigateAutocomplete(dir) {
 
 // ── SKIP (open at ~/) ──
 async function skipStartSession() {
-  const task = backlogTasks.find(t => t.id === startSessionCardId);
-  if (!task) return;
-
-  const session = await createSessionAPI(task.name, '~/');
-
-  backlogTasks = backlogTasks.filter(t => t.id !== startSessionCardId);
-  localStorage.setItem('vt-backlog', JSON.stringify(backlogTasks));
-
-  closeStartSessionModal();
-  await fetchSessions();
-  render();
-
-  const card = getAllCards().find(c => c.session === session.id);
-  if (card) openPanel(card);
+  if (startSessionCardId) {
+    const task = backlogTasks.find(t => t.id === startSessionCardId);
+    if (!task) return;
+    const tplId = task.templateId || pendingTemplateId || null;
+    const session = await createSessionAPI(task.name, '~/', tplId);
+    backlogTasks = backlogTasks.filter(t => t.id !== startSessionCardId);
+    localStorage.setItem('vt-backlog', JSON.stringify(backlogTasks));
+    closeStartSessionModal();
+    await fetchSessions();
+    render();
+    const card = getAllCards().find(c => c.session === session.id);
+    if (card) openPanel(card);
+  } else if (pendingTemplateId) {
+    const tpl = templates.find(t => t.id === pendingTemplateId);
+    if (!tpl) return;
+    const session = await createSessionAPI(tpl.name, '~/', pendingTemplateId);
+    closeStartSessionModal();
+    if (currentView === 'agents') switchView('board');
+    await fetchSessions();
+    render();
+    const card = getAllCards().find(c => c.session === session.id);
+    if (card) openPanel(card);
+  }
 }
 
 // ── NATIVE DIRECTORY PICKER ──
@@ -1204,20 +4637,33 @@ async function toggleBrowser() {
 
 async function startSession() {
   const pathInput = document.getElementById('sessionPath');
-  const task = backlogTasks.find(t => t.id === startSessionCardId);
-  if (!task) return;
+  const cwd = pathInput.value.trim();
 
-  const session = await createSessionAPI(task.name, pathInput.value.trim());
-
-  backlogTasks = backlogTasks.filter(t => t.id !== startSessionCardId);
-  localStorage.setItem('vt-backlog', JSON.stringify(backlogTasks));
-
-  closeStartSessionModal();
-  await fetchSessions();
-  render();
-
-  const card = getAllCards().find(c => c.session === session.id);
-  if (card) openPanel(card);
+  if (startSessionCardId) {
+    // Backlog task → session flow
+    const task = backlogTasks.find(t => t.id === startSessionCardId);
+    if (!task) return;
+    const tplId = task.templateId || pendingTemplateId || null;
+    const session = await createSessionAPI(task.name, cwd, tplId);
+    backlogTasks = backlogTasks.filter(t => t.id !== startSessionCardId);
+    localStorage.setItem('vt-backlog', JSON.stringify(backlogTasks));
+    closeStartSessionModal();
+    await fetchSessions();
+    render();
+    const card = getAllCards().find(c => c.session === session.id);
+    if (card) openPanel(card);
+  } else if (pendingTemplateId) {
+    // Template → direct launch flow
+    const tpl = templates.find(t => t.id === pendingTemplateId);
+    if (!tpl) return;
+    const session = await createSessionAPI(tpl.name, cwd, pendingTemplateId);
+    closeStartSessionModal();
+    if (currentView === 'agents') switchView('board');
+    await fetchSessions();
+    render();
+    const card = getAllCards().find(c => c.session === session.id);
+    if (card) openPanel(card);
+  }
 }
 
 // ── POLLING ──
@@ -1228,7 +4674,7 @@ setInterval(async () => {
 
 // ── INIT ──
 (async () => {
-  await fetchSessions();
+  await Promise.all([fetchSessions(), fetchTemplates(), loadConnectorCatalog()]);
   render();
   closePanel();
   closeModal();
