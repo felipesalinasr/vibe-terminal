@@ -2454,6 +2454,25 @@ body::before {
 const API = '';
 const WS_URL = `ws://${location.host}/ws`;
 
+// ── API CLIENT ──
+async function apiRequest(path, options = {}) {
+  const url = `${API}${path}`;
+  const res = await fetch(url, {
+    headers: { 'Content-Type': 'application/json', ...options.headers },
+    ...options,
+  });
+  if (!res.ok) {
+    let errBody;
+    try { errBody = await res.json(); } catch { errBody = { error: res.statusText }; }
+    console.error(`API ${options.method || 'GET'} ${path} → ${res.status}`, errBody);
+    const err = new Error(errBody.error || `HTTP ${res.status}`);
+    err.status = res.status;
+    err.details = errBody.details;
+    throw err;
+  }
+  return res.json();
+}
+
 // ── STATE ──
 const columns = [
   { id: 'backlog', label: 'Backlog' },
