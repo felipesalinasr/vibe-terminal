@@ -131,6 +131,15 @@ export function sessionRoutes() {
     });
   });
 
+  // HTTP fallback for scrollback data (used when WebSocket reconnects or is unavailable)
+  router.get('/sessions/:id/scrollback', (req, res) => {
+    const session = getSession(req.params.id);
+    if (!session) throw notFound('session not found');
+    const offset = parseInt(req.query.offset) || 0;
+    const data = session.scrollback.slice(offset).join('');
+    res.json({ data, offset, total: session.scrollback.length });
+  });
+
   router.delete('/sessions/:id', (req, res) => {
     const session = getSession(req.params.id);
     if (!session) throw notFound('session not found');

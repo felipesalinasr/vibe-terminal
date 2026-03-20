@@ -1,0 +1,15 @@
+node_modules
+.git
+.github
+.env
+.env.local
+.DS_Store
+*.log
+.playwright-mcp
+server/browse-helper
+launcher
+docs
+templates/tpl-*.json
+server/connectors-catalog.json
+server/**/*.test.js
+vitest.config.js
