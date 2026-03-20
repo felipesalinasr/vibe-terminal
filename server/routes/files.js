@@ -22,9 +22,9 @@ export function fileRoutes({ serverDir }) {
   const upload = multer({ dest: dropDir, limits: { fileSize: MAX_DROP_FILE_SIZE } });
 
   router.post('/drop', upload.single('file'), (req, res) => {
-    if (!req.file) return res.status(400).json({ error: 'no file' });
+    if (!req.file) throw badRequest('no file');
     const dest = join(dropDir, req.file.originalname);
-    try { renameSync(req.file.path, dest); } catch {}
+    try { renameSync(req.file.path, dest); } catch { /* rename failed — fall back to temp path */ }
     res.json({ path: existsSync(dest) ? dest : req.file.path });
   });
 
@@ -83,7 +83,7 @@ export function fileRoutes({ serverDir }) {
       result.purpose = await readFile(join(resolved, 'CLAUDE.md'), 'utf8');
       const heading = result.purpose.match(/^#\s+(.+)$/m);
       if (heading) result.name = heading[1].trim();
-    } catch {}
+    } catch { /* no CLAUDE.md — use directory name */ }
 
     try {
       const skillsDir = join(resolved, '.claude', 'skills');
@@ -100,9 +100,9 @@ export function fileRoutes({ serverDir }) {
             if (nm) name = nm[1].trim();
           }
           result.skills.push(name);
-        } catch {}
+        } catch { /* no SKILL.md — skip */ }
       }
-    } catch {}
+    } catch { /* no skills dir — skip */ }
 
     res.json(result);
   }));

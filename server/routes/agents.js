@@ -4,7 +4,7 @@ import { mkdirSync } from 'fs';
 import { readFile, writeFile, readdir } from 'fs/promises';
 import { asyncHandler } from '../middleware/async-handler.js';
 import { validate } from '../middleware/validate.js';
-import { updateAgentSchema, purposeSchema, agentsMdSchema, fileTrackSchema } from '../schemas.js';
+import { updateAgentSchema, purposeSchema, agentsMdSchema, fileTrackSchema, skillWriteSchema } from '../schemas.js';
 import { notFound, badRequest } from '../errors.js';
 import { sanitizePathParam, assertPathWithin, ALLOWED_KB_TYPES, MAX_KB_FILE_SIZE } from '../security.js';
 import { getSession } from '../sessions.js';
@@ -73,7 +73,7 @@ export function agentRoutes() {
     try {
       const skills = await scanSkillsDir(skillsDir);
       res.json(skills);
-    } catch {
+    } catch { /* skills dir may not exist — return empty */
       res.json([]);
     }
   });
@@ -90,7 +90,7 @@ export function agentRoutes() {
     res.json({ content });
   }));
 
-  router.put('/:id/skills/:folder', asyncHandler(async (req, res) => {
+  router.put('/:id/skills/:folder', validate(skillWriteSchema), asyncHandler(async (req, res) => {
     const session = getSession(req.params.id);
     if (!session?.cwd) throw notFound('session not found');
     const folder = sanitizePathParam(req.params.folder);
@@ -103,7 +103,7 @@ export function agentRoutes() {
     try {
       const skills = await scanSkillsDir(join(session.cwd, '.claude', 'skills'));
       await syncSkillsToCLAUDEmd(session.cwd, skills);
-    } catch {}
+    } catch { /* best-effort sync — don't fail the write */ }
     res.json({ ok: true });
   }));
 

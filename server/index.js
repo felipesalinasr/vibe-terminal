@@ -36,6 +36,7 @@ const server = createServer(app);
 const PORT = process.env.PORT || 8765;
 
 // ── Middleware ──
+app.use((req, res, next) => { res.setHeader('X-Content-Type-Options', 'nosniff'); next(); });
 app.use(express.json());
 app.use(requestLogger);
 app.use(express.static(join(__dirname, '..', 'public')));

@@ -54,7 +54,7 @@ export function setupWebSocket(server) {
         } else if (msg.type === 'resize') {
           resizeSession(sessionId, msg.cols, msg.rows);
         }
-      } catch {}
+      } catch { /* malformed JSON from client — ignore */ }
     });
 
     ws.on('close', () => {

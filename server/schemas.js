@@ -43,6 +43,10 @@ export const createTemplateSchema = z.object({
 
 export const updateTemplateSchema = createTemplateSchema.partial();
 
+export const skillWriteSchema = z.object({
+  content: z.string(),
+});
+
 export const openSchema = z.object({
   path: z.string().min(1, 'path is required'),
   action: z.enum(['open', 'folder']).optional(),

@@ -30,10 +30,10 @@ export function skillRoutes() {
               seen.set(skill.folder, { ...skill, sourceAgent: t.name, sourceCwd: resolved });
             }
           }
-        } catch {}
+        } catch { /* skills dir may not exist for this template */ }
       }
       res.json(Array.from(seen.values()));
-    } catch {
+    } catch { /* no templates or scan failure — return empty */
       res.json([]);
     }
   });
@@ -64,7 +64,7 @@ export function skillRoutes() {
       externalSkillsCache = skills;
       externalSkillsCacheTime = now;
       res.json(skills);
-    } catch {
+    } catch { /* GitHub API unavailable — serve cache or empty */
       res.json(externalSkillsCache || []);
     }
   });

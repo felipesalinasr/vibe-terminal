@@ -50,7 +50,7 @@ export function sessionRoutes() {
             const settingsDir = join(cwd, '.claude');
             const settingsPath = join(settingsDir, 'settings.local.json');
             let settings = {};
-            try { settings = JSON.parse(await readFile(settingsPath, 'utf8')); } catch {}
+            try { settings = JSON.parse(await readFile(settingsPath, 'utf8')); } catch { /* no existing settings — start fresh */ }
             if (!settings.permissions) settings.permissions = {};
             const existing = settings.permissions.allow || [];
             settings.permissions.allow = [...new Set([...existing, ...mcpTools])];
@@ -100,14 +100,14 @@ export function sessionRoutes() {
               if (descMatch) description = descMatch[1].trim();
             }
             skills.push({ folder: entry.name, name, description });
-          } catch {}
+          } catch { /* no SKILL.md in folder — skip */ }
         }
         for (const listener of s.listeners) listener({ type: 'skills-changed', skills });
         await syncSkillsToCLAUDEmd(s.cwd, skills);
         for (const skill of skills) {
           appendAuditEntry(s.cwd, { sessionId: session.id, event: 'skill_install', detail: { skill: skill.name } });
         }
-      } catch {}
+      } catch { /* skills dir may not exist yet */ }
     });
 
     const s = getSession(session.id);

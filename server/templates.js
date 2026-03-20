@@ -24,10 +24,10 @@ export async function listTemplates() {
       try {
         const raw = await readFile(join(TEMPLATES_DIR, file), 'utf8');
         templates.push(JSON.parse(raw));
-      } catch {}
+      } catch { /* corrupt template file — skip */ }
     }
     return templates.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-  } catch {
+  } catch { /* templates dir may not exist yet */
     return [];
   }
 }
