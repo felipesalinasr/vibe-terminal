@@ -1,5 +1,6 @@
 import { HttpError } from '../errors.js';
 import multer from 'multer';
+import { logger } from '../logger.js';
 
 /**
  * Centralized Express error handler.
@@ -24,7 +25,7 @@ export function errorHandler(err, req, res, _next) {
   // Custom HttpError
   if (err instanceof HttpError) {
     if (err.status >= 500) {
-      console.error(`[${req.method} ${req.originalUrl}]`, err.message, err.stack);
+      logger.error('Server error', { method: req.method, url: req.originalUrl, error: err.message, stack: err.stack });
     }
     res.status(err.status).json({
       error: err.message,
@@ -41,6 +42,6 @@ export function errorHandler(err, req, res, _next) {
 
   // Unknown error — log everything, expose nothing
   const rootError = err instanceof Error ? err : new Error(String(err));
-  console.error(`[${req.method} ${req.originalUrl}] Unhandled:`, rootError.message, rootError.stack);
+  logger.error('Unhandled error', { method: req.method, url: req.originalUrl, error: rootError.message, stack: rootError.stack });
   res.status(500).json({ error: 'Internal server error' });
 }

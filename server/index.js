@@ -20,7 +20,9 @@ import { badRequest, notFound, forbidden, unprocessable } from './errors.js';
 import { errorHandler } from './middleware/error-handler.js';
 import { asyncHandler } from './middleware/async-handler.js';
 import { validate } from './middleware/validate.js';
+import { requestLogger } from './middleware/request-logger.js';
 import { createSessionSchema, updateAgentSchema, purposeSchema, agentsMdSchema, skillContentWriteSchema, createTemplateSchema, updateTemplateSchema, openSchema, fileTrackSchema, connectorSyncSchema } from './schemas.js';
+import { logger } from './logger.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -30,7 +32,7 @@ try {
   const saved = JSON.parse(await readFile(CATALOG_PATH, 'utf8'));
   if (saved && Object.keys(saved).length > 0) {
     setCatalog(saved);
-    console.log(`Loaded connector catalog from disk (${Object.keys(saved).length} connectors)`);
+    logger.info('Loaded connector catalog from disk', { count: Object.keys(saved).length });
   }
 } catch {
   // No persisted catalog — use hardcoded defaults
@@ -196,6 +198,7 @@ const server = createServer(app);
 const PORT = 8765;
 
 app.use(express.json());
+app.use(requestLogger);
 app.use(express.static(join(__dirname, '..', 'public')));
 
 // ── REST API ──
@@ -385,9 +388,9 @@ function ensureBrowseHelper() {
   const needsCompile = !existsSync(helperBin) ||
     statSync(helperSrc).mtimeMs > statSync(helperBin).mtimeMs;
   if (needsCompile) {
-    console.log('Compiling browse helper...');
+    logger.info('Compiling browse helper');
     execFileSync('swiftc', [helperSrc, '-o', helperBin, '-framework', 'AppKit']);
-    console.log('Browse helper ready.');
+    logger.info('Browse helper ready');
   }
 }
 
@@ -891,8 +894,8 @@ wss.on('connection', (ws, req) => {
 // ── Start ──
 
 const recovered = loadHistoricalSessions();
-if (recovered > 0) console.log(`Restored ${recovered} previous session(s)`);
+if (recovered > 0) logger.info('Restored previous sessions', { count: recovered });
 
 server.listen(PORT, () => {
-  console.log(`Vibe Terminal running at http://localhost:${PORT}`);
+  logger.info('Vibe Terminal running', { url: `http://localhost:${PORT}` });
 });
