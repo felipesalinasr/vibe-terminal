@@ -11,6 +11,7 @@ import { skillRoutes } from './routes/skills.js';
 import { templateRoutes } from './routes/templates.js';
 import { connectorRoutes } from './routes/connectors.js';
 import { fileRoutes } from './routes/files.js';
+import { healthRoutes } from './routes/health.js';
 import { setupWebSocket } from './ws.js';
 import { setCatalog } from './connectors.js';
 import { loadHistoricalSessions } from './sessions.js';
@@ -32,7 +33,7 @@ try {
 
 const app = express();
 const server = createServer(app);
-const PORT = 8765;
+const PORT = process.env.PORT || 8765;
 
 // ── Middleware ──
 app.use(express.json());
@@ -46,6 +47,7 @@ app.use('/api', skillRoutes());
 app.use('/api/templates', templateRoutes());
 app.use('/api/connectors', connectorRoutes({ catalogPath: CATALOG_PATH }));
 app.use('/api', fileRoutes({ serverDir: __dirname }));
+app.use('/api', healthRoutes());
 
 // 404 for unknown API routes
 app.use('/api', (req, res) => {
