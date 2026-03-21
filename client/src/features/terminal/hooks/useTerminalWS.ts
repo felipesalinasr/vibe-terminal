@@ -1,10 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import type { TerminalInboundMessage, TerminalOutboundMessage } from '@/types/ws.ts'
-import type { SessionSummary } from '@/types/session.ts'
+import type { SessionSummary, SessionDetail } from '@/types/session.ts'
 import { sessionKeys } from '@/hooks/useSessions.ts'
 import { agentKeys } from '@/hooks/useAgentConfig.ts'
-import { getScrollback } from '@/api/sessions.ts'
 
 export type TerminalWSState =
   | 'disconnected'
@@ -41,6 +40,7 @@ export function useTerminalWS({
   const retryCountRef = useRef(0)
   const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const hasReceivedScrollbackRef = useRef(false)
+  const isReconnectRef = useRef(false)
   const sessionIdRef = useRef(sessionId)
   const enabledRef = useRef(enabled)
   const stateRef = useRef<TerminalWSState>('disconnected')
@@ -91,16 +91,28 @@ export function useTerminalWS({
     }
   }, [])
 
-  const recoverViaHTTP = useCallback(async (sid: string) => {
-    try {
-      const response = await getScrollback(sid)
-      if (response.data) {
-        broadcast({ type: 'scrollback', data: response.data })
-      }
-    } catch {
-      // Recovery failed silently -- terminal may be stale
-    }
-  }, [broadcast])
+  const updateSessionCache = useCallback(
+    (sid: string, status: string) => {
+      // Fix #25: update both list cache AND detail cache
+      queryClient.setQueryData<SessionSummary[]>(
+        sessionKeys.all,
+        (old) => {
+          if (!old) return old
+          return old.map((s) =>
+            s.id === sid ? { ...s, status: status as SessionSummary['status'] } : s,
+          )
+        },
+      )
+      queryClient.setQueryData<SessionDetail>(
+        sessionKeys.detail(sid),
+        (old) => {
+          if (!old) return old
+          return { ...old, status: status as SessionDetail['status'] }
+        },
+      )
+    },
+    [queryClient],
+  )
 
   const connect = useCallback((sid: string) => {
     cleanup()
@@ -113,7 +125,6 @@ export function useTerminalWS({
 
     ws.onopen = () => {
       retryCountRef.current = 0
-      // Stay in 'connecting' until scrollback arrives
     }
 
     ws.onmessage = (event: MessageEvent) => {
@@ -126,12 +137,19 @@ export function useTerminalWS({
 
       switch (msg.type) {
         case 'scrollback': {
+          // Fix #23: On reconnect, the terminal already has content.
+          // Suppress the server's scrollback to avoid duplication.
+          if (isReconnectRef.current) {
+            hasReceivedScrollbackRef.current = true
+            setStateAndRef('ready')
+            break
+          }
+
           if (!hasReceivedScrollbackRef.current) {
             hasReceivedScrollbackRef.current = true
             setStateAndRef('hydrating')
           }
           broadcast(msg)
-          // Transition to ready after hydration
           setStateAndRef('ready')
           break
         }
@@ -142,16 +160,13 @@ export function useTerminalWS({
         }
 
         case 'state': {
-          // Update session status in React Query cache
-          queryClient.setQueryData<SessionSummary[]>(
-            sessionKeys.all,
-            (old) => {
-              if (!old) return old
-              return old.map((s) =>
-                s.id === sid ? { ...s, status: msg.state as SessionSummary['status'] } : s,
-              )
-            },
-          )
+          // Fix #24: If no scrollback was received and we're still connecting,
+          // this means the session has no scrollback (fresh session).
+          // Transition to ready so the UI doesn't stay stuck on "Connecting...".
+          if (!hasReceivedScrollbackRef.current && stateRef.current === 'connecting') {
+            setStateAndRef('ready')
+          }
+          updateSessionCache(sid, msg.state)
           broadcast(msg)
           break
         }
@@ -170,12 +185,14 @@ export function useTerminalWS({
 
         case 'historical': {
           setStateAndRef('historical')
+          updateSessionCache(sid, 'historical')
           broadcast(msg)
           break
         }
 
         case 'exit': {
           setStateAndRef('exited')
+          updateSessionCache(sid, 'done')
           broadcast(msg)
           break
         }
@@ -207,12 +224,9 @@ export function useTerminalWS({
         retryTimerRef.current = setTimeout(() => {
           retryTimerRef.current = null
           if (enabledRef.current && sessionIdRef.current === sid) {
-            // Recover scrollback via HTTP before reconnecting
-            void recoverViaHTTP(sid).then(() => {
-              if (enabledRef.current && sessionIdRef.current === sid) {
-                connect(sid)
-              }
-            })
+            // Fix #23: Mark as reconnect so scrollback is suppressed
+            isReconnectRef.current = true
+            connect(sid)
           }
         }, delay)
       } else {
@@ -223,12 +237,13 @@ export function useTerminalWS({
     ws.onerror = () => {
       // onerror is always followed by onclose, so let onclose handle state
     }
-  }, [broadcast, cleanup, queryClient, recoverViaHTTP])
+  }, [broadcast, cleanup, queryClient, updateSessionCache])
 
   // Main effect: connect/disconnect based on sessionId + enabled
   useEffect(() => {
     if (enabled && sessionId) {
       retryCountRef.current = 0
+      isReconnectRef.current = false
       connect(sessionId)
     } else {
       cleanup()

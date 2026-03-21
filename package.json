@@ -13,7 +13,7 @@
     "test": "vitest run",
     "test:client": "cd client && npx vitest run",
     "test:watch": "vitest",
-    "check": "node --check server/index.js && vitest run"
+    "check": "node --check server/index.js && vitest run && cd client && npx eslint src/ && npx vitest run && npm run build"
   },
   "dependencies": {
     "express": "^4.21.0",

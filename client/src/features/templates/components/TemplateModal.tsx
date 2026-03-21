@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { useUiStore } from '@/stores/ui.ts'
 import {
   useTemplates,
@@ -98,8 +98,36 @@ export function TemplateModal() {
 
   const nameRef = useRef<HTMLInputElement>(null)
 
-  /* ── Init form from template ── */
-  useEffect(() => {
+  /* ── Migrate old tools array to connector entries ── */
+  function migrateToolsToConnectors(
+    tools: string[],
+    cat: Record<string, ConnectorEntry> | undefined,
+  ): TemplateConnector[] {
+    if (!tools?.length || !cat) return []
+    const entries: TemplateConnector[] = []
+    for (const conn of Object.values(cat)) {
+      const matched: string[] = []
+      for (const action of conn.actions) {
+        if (tools.includes(action.mcpTool) || tools.includes(action.id)) {
+          matched.push(action.id)
+        }
+      }
+      if (matched.length) {
+        entries.push({
+          connectorId: conn.id,
+          enabledActions: matched,
+          allEnabled: matched.length === conn.actions.length,
+        })
+      }
+    }
+    return entries
+  }
+
+  /* ── Init form from template (render-time state adjustment) ── */
+  const [prevEditId, setPrevEditId] = useState<string | undefined>(undefined)
+  const currentEditId = editingTemplateId ?? undefined
+  if (currentEditId !== prevEditId) {
+    setPrevEditId(currentEditId)
     if (isEdit && editTemplate) {
       setName(editTemplate.name || '')
       setCwd(editTemplate.defaultCwd || '')
@@ -131,8 +159,15 @@ export function TemplateModal() {
     setLocalLoaded(false)
     setExternalLoaded(false)
     setSaveLabel('Save')
-    setTimeout(() => nameRef.current?.focus(), 100)
-  }, [isEdit, editTemplate, catalog])
+  }
+
+  // Focus name input after form init
+  useEffect(() => {
+    if (currentEditId !== undefined || currentEditId === undefined) {
+      const timer = setTimeout(() => nameRef.current?.focus(), 100)
+      return () => clearTimeout(timer)
+    }
+  }, [currentEditId])
 
   /* ── Escape key ── */
   useEffect(() => {
@@ -143,128 +178,91 @@ export function TemplateModal() {
     return () => document.removeEventListener('keydown', handler)
   }, [closeModal])
 
-  /* ── Migrate old tools array to connector entries ── */
-  function migrateToolsToConnectors(
-    tools: string[],
-    cat: Record<string, ConnectorEntry> | undefined,
-  ): TemplateConnector[] {
-    if (!tools?.length || !cat) return []
-    const entries: TemplateConnector[] = []
-    for (const conn of Object.values(cat)) {
-      const matched: string[] = []
-      for (const action of conn.actions) {
-        if (tools.includes(action.mcpTool) || tools.includes(action.id)) {
-          matched.push(action.id)
-        }
-      }
-      if (matched.length) {
-        entries.push({
-          connectorId: conn.id,
-          enabledActions: matched,
-          allEnabled: matched.length === conn.actions.length,
-        })
-      }
-    }
-    return entries
-  }
-
   /* ────────────────────────────────────────
    * SKILLS
    * ──────────────────────────────────────── */
 
-  const addSkillEntry = useCallback(
-    (entry: SkillEntry) => {
-      setSkillEntries((prev) => {
-        if (prev.some((e) => e.name === entry.name)) return prev
-        return [...prev, entry]
-      })
-    },
-    [],
-  )
+  const addSkillEntry = (entry: SkillEntry) => {
+    setSkillEntries((prev) => {
+      if (prev.some((e) => e.name === entry.name)) return prev
+      return [...prev, entry]
+    })
+  }
 
-  const removeSkillChip = useCallback(
-    (index: number) => {
-      if (selectedSkillIndex === index) setSelectedSkillIndex(-1)
-      else if (selectedSkillIndex > index) setSelectedSkillIndex((p) => p - 1)
-      setSkillEntries((prev) => prev.filter((_, i) => i !== index))
-    },
-    [selectedSkillIndex],
-  )
+  const removeSkillChip = (index: number) => {
+    if (selectedSkillIndex === index) setSelectedSkillIndex(-1)
+    else if (selectedSkillIndex > index) setSelectedSkillIndex((p) => p - 1)
+    setSkillEntries((prev) => prev.filter((_, i) => i !== index))
+  }
 
   /* ── Skill detail panel ── */
-  const openSkillDetail = useCallback(
-    async (index: number) => {
-      if (selectedSkillIndex === index) {
-        setSelectedSkillIndex(-1)
-        return
-      }
-      setSelectedSkillIndex(index)
-      const entry = skillEntries[index]
-      if (!entry) return
+  const openSkillDetail = async (index: number) => {
+    if (selectedSkillIndex === index) {
+      setSelectedSkillIndex(-1)
+      return
+    }
+    setSelectedSkillIndex(index)
+    const entry = skillEntries[index]
+    if (!entry) return
 
-      let detailPath = entry.path
-      if (!detailPath && entry.source === 'local' && cwd) {
-        detailPath = `${cwd.replace(/\/+$/, '')}/.claude/skills/${entry.name}/SKILL.md`
-        setSkillEntries((prev) => {
-          const next = [...prev]
-          next[index] = { ...next[index], path: detailPath }
-          return next
-        })
-      }
+    let detailPath = entry.path
+    if (!detailPath && entry.source === 'local' && cwd) {
+      detailPath = `${cwd.replace(/\/+$/, '')}/.claude/skills/${entry.name}/SKILL.md`
+      setSkillEntries((prev) => {
+        const next = [...prev]
+        next[index] = { ...next[index], path: detailPath }
+        return next
+      })
+    }
 
-      setSkillDetailLoading(true)
-      setSkillDetailContent('')
-      setSkillDetailOriginal('')
+    setSkillDetailLoading(true)
+    setSkillDetailContent('')
+    setSkillDetailOriginal('')
 
-      if (detailPath) {
-        try {
-          const data = await skillsApi.readSkillContent(detailPath)
-          setSkillDetailContent(data.content || '')
-          setSkillDetailOriginal(data.content || '')
-        } catch {
-          setSkillDetailContent('')
-          setSkillDetailOriginal('')
-        }
-      }
-      setSkillDetailLoading(false)
-    },
-    [selectedSkillIndex, skillEntries, cwd],
-  )
-
-  const saveSkillDetail = useCallback(
-    async (index: number) => {
-      const entry = skillEntries[index]
-      if (!entry) return
-      let savePath = entry.path
-      if (!savePath && cwd) {
-        savePath = `${cwd.replace(/\/+$/, '')}/.claude/skills/${entry.name}/SKILL.md`
-        setSkillEntries((prev) => {
-          const next = [...prev]
-          next[index] = { ...next[index], path: savePath, source: 'local' }
-          return next
-        })
-      }
-      if (!savePath) {
-        setSaveLabel('No directory set')
-        setTimeout(() => setSaveLabel('Save'), 1500)
-        return
-      }
-      setSaveLabel('Saving...')
+    if (detailPath) {
       try {
-        await skillsApi.writeSkillContent(savePath, skillDetailContent)
-        setSkillDetailOriginal(skillDetailContent)
-        setSaveLabel('Saved')
-        setTimeout(() => setSaveLabel('Save'), 1200)
+        const data = await skillsApi.readSkillContent(detailPath)
+        setSkillDetailContent(data.content || '')
+        setSkillDetailOriginal(data.content || '')
       } catch {
-        setSaveLabel('Error')
-        setTimeout(() => setSaveLabel('Save'), 1500)
+        setSkillDetailContent('')
+        setSkillDetailOriginal('')
       }
-    },
-    [skillEntries, cwd, skillDetailContent],
-  )
+    }
+    setSkillDetailLoading(false)
+  }
+
+  const saveSkillDetail = async (index: number) => {
+    const entry = skillEntries[index]
+    if (!entry) return
+    let savePath = entry.path
+    if (!savePath && cwd) {
+      savePath = `${cwd.replace(/\/+$/, '')}/.claude/skills/${entry.name}/SKILL.md`
+      setSkillEntries((prev) => {
+        const next = [...prev]
+        next[index] = { ...next[index], path: savePath, source: 'local' }
+        return next
+      })
+    }
+    if (!savePath) {
+      setSaveLabel('No directory set')
+      setTimeout(() => setSaveLabel('Save'), 1500)
+      return
+    }
+    setSaveLabel('Saving...')
+    try {
+      await skillsApi.writeSkillContent(savePath, skillDetailContent)
+      setSkillDetailOriginal(skillDetailContent)
+      setSaveLabel('Saved')
+      setTimeout(() => setSaveLabel('Save'), 1200)
+    } catch {
+      setSaveLabel('Error')
+      setTimeout(() => setSaveLabel('Save'), 1500)
+    }
+  }
 
   /* ── Paste command ── */
-  const parseAndAddSkillCommand = useCallback(() => {
+  const parseAndAddSkillCommand = () => {
     const val = pasteInput.trim()
     if (!val) return
     const skillMatch = val.match(/--skill\s+(\S+)/)
@@ -280,10 +278,10 @@ export function TemplateModal() {
       addSkillEntry({ name: val, source: 'npx', installCommand: val })
     }
     setPasteInput('')
-  }, [pasteInput, addSkillEntry])
+  }
 
   /* ── Local skills picker ── */
-  const loadLocalSkills = useCallback(async () => {
+  const loadLocalSkills = async () => {
     if (localLoaded) return
     try {
       const data = await skillsApi.listLocalSkills()
@@ -292,10 +290,10 @@ export function TemplateModal() {
       setLocalSkills([])
     }
     setLocalLoaded(true)
-  }, [localLoaded])
+  }
 
   /* ── External skills picker ── */
-  const loadExternalSkills = useCallback(async () => {
+  const loadExternalSkills = async () => {
     if (externalLoaded) return
     try {
       const data = await skillsApi.listExternalSkills()
@@ -304,18 +302,15 @@ export function TemplateModal() {
       setExternalSkills([])
     }
     setExternalLoaded(true)
-  }, [externalLoaded])
+  }
 
-  const switchTab = useCallback(
-    (tab: SkillTab) => {
-      setSkillTab(tab)
-      setLocalSearch('')
-      setExternalSearch('')
-      if (tab === 'local') loadLocalSkills()
-      if (tab === 'browse') loadExternalSkills()
-    },
-    [loadLocalSkills, loadExternalSkills],
-  )
+  const switchTab = (tab: SkillTab) => {
+    setSkillTab(tab)
+    setLocalSearch('')
+    setExternalSearch('')
+    if (tab === 'local') loadLocalSkills()
+    if (tab === 'browse') loadExternalSkills()
+  }
 
   const filteredLocalSkills = useMemo(() => {
     const q = localSearch.toLowerCase()
@@ -354,80 +349,68 @@ export function TemplateModal() {
    * CONNECTORS
    * ──────────────────────────────────────── */
 
-  const addConnector = useCallback(
-    (connectorId: string) => {
-      setConnectorEntries((prev) => {
-        if (prev.some((c) => c.connectorId === connectorId)) return prev
-        const conn = catalog?.[connectorId]
-        if (!conn) return prev
-        const cfg: TemplateConnector = {
-          connectorId,
-          enabledActions: conn.actions.map((a) => a.id),
-          allEnabled: true,
+  const addConnector = (connectorId: string) => {
+    setConnectorEntries((prev) => {
+      if (prev.some((c) => c.connectorId === connectorId)) return prev
+      const conn = catalog?.[connectorId]
+      if (!conn) return prev
+      const cfg: TemplateConnector = {
+        connectorId,
+        enabledActions: conn.actions.map((a) => a.id),
+        allEnabled: true,
+      }
+      const next = [...prev, cfg]
+      setSelectedConnectorIndex(next.length - 1)
+      return next
+    })
+  }
+
+  const removeConnector = (index: number) => {
+    if (selectedConnectorIndex === index) setSelectedConnectorIndex(-1)
+    else if (selectedConnectorIndex > index)
+      setSelectedConnectorIndex((p) => p - 1)
+    setConnectorEntries((prev) => prev.filter((_, i) => i !== index))
+  }
+
+  const toggleAction = (connIndex: number, actionId: string, enabled: boolean) => {
+    setConnectorEntries((prev) => {
+      const next = prev.map((cfg, i) => {
+        if (i !== connIndex) return cfg
+        const conn = catalog?.[cfg.connectorId]
+        if (!conn) return cfg
+        let ea = cfg.allEnabled
+          ? conn.actions.map((a) => a.id)
+          : [...(cfg.enabledActions || [])]
+        if (enabled) {
+          if (!ea.includes(actionId)) ea = [...ea, actionId]
+        } else {
+          ea = ea.filter((id) => id !== actionId)
         }
-        const next = [...prev, cfg]
-        setSelectedConnectorIndex(next.length - 1)
-        return next
+        const allOn = ea.length === conn.actions.length
+        return { ...cfg, enabledActions: ea, allEnabled: allOn }
       })
-    },
-    [catalog],
-  )
+      return next
+    })
+  }
 
-  const removeConnector = useCallback(
-    (index: number) => {
-      if (selectedConnectorIndex === index) setSelectedConnectorIndex(-1)
-      else if (selectedConnectorIndex > index)
-        setSelectedConnectorIndex((p) => p - 1)
-      setConnectorEntries((prev) => prev.filter((_, i) => i !== index))
-    },
-    [selectedConnectorIndex],
-  )
-
-  const toggleAction = useCallback(
-    (connIndex: number, actionId: string, enabled: boolean) => {
-      setConnectorEntries((prev) => {
-        const next = prev.map((cfg, i) => {
-          if (i !== connIndex) return cfg
-          const conn = catalog?.[cfg.connectorId]
-          if (!conn) return cfg
-          let ea = cfg.allEnabled
-            ? conn.actions.map((a) => a.id)
-            : [...(cfg.enabledActions || [])]
-          if (enabled) {
-            if (!ea.includes(actionId)) ea = [...ea, actionId]
-          } else {
-            ea = ea.filter((id) => id !== actionId)
+  const toggleAllActions = (connIndex: number, enabled: boolean) => {
+    setConnectorEntries((prev) => {
+      const next = prev.map((cfg, i) => {
+        if (i !== connIndex) return cfg
+        const conn = catalog?.[cfg.connectorId]
+        if (!conn) return cfg
+        if (enabled) {
+          return {
+            ...cfg,
+            enabledActions: conn.actions.map((a) => a.id),
+            allEnabled: true,
           }
-          const allOn = ea.length === conn.actions.length
-          return { ...cfg, enabledActions: ea, allEnabled: allOn }
-        })
-        return next
+        }
+        return { ...cfg, enabledActions: [], allEnabled: false }
       })
-    },
-    [catalog],
-  )
-
-  const toggleAllActions = useCallback(
-    (connIndex: number, enabled: boolean) => {
-      setConnectorEntries((prev) => {
-        const next = prev.map((cfg, i) => {
-          if (i !== connIndex) return cfg
-          const conn = catalog?.[cfg.connectorId]
-          if (!conn) return cfg
-          if (enabled) {
-            return {
-              ...cfg,
-              enabledActions: conn.actions.map((a) => a.id),
-              allEnabled: true,
-            }
-          }
-          return { ...cfg, enabledActions: [], allEnabled: false }
-        })
-        return next
-      })
-    },
-    [catalog],
-  )
+      return next
+    })
+  }
 
   /* ── Connector catalog grouped ── */
   const connectorCategories = useMemo(() => {
@@ -469,14 +452,14 @@ export function TemplateModal() {
    * BROWSE / IMPORT
    * ──────────────────────────────────────── */
 
-  const handleBrowse = useCallback(async () => {
+  const handleBrowse = async () => {
     try {
       const res = await filesApi.browse()
       if (res.path) setCwd(res.path)
     } catch { /* ignore */ }
-  }, [])
+  }
 
-  const handleImport = useCallback(async () => {
+  const handleImport = async () => {
     let dir = cwd.trim()
     if (!dir) {
       try {
@@ -495,17 +478,17 @@ export function TemplateModal() {
       if (data.purpose) setIdentity(data.purpose)
       if (data.defaultCwd) setCwd(data.defaultCwd)
       if (data.skills?.length) {
-        data.skills.forEach((s) => addSkillEntry({ name: s, source: 'local' }))
+        data.skills.forEach((s: string) => addSkillEntry({ name: s, source: 'local' }))
       }
     } catch { /* ignore */ }
     setImporting(false)
-  }, [cwd, addSkillEntry])
+  }
 
   /* ────────────────────────────────────────
    * SUBMIT
    * ──────────────────────────────────────── */
 
-  const handleSubmit = useCallback(async () => {
+  const handleSubmit = async () => {
     const trimmedName = name.trim()
     if (!trimmedName) return
 
@@ -540,20 +523,7 @@ export function TemplateModal() {
       await createMutation.mutateAsync(input)
     }
     closeModal()
-  }, [
-    name,
-    cwd,
-    identity,
-    constraints,
-    skillEntries,
-    connectorEntries,
-    catalog,
-    isEdit,
-    editingTemplateId,
-    updateMutation,
-    createMutation,
-    closeModal,
-  ])
+  }
 
   /* ────────────────────────────────────────
    * RENDER

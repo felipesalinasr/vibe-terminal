@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect } from 'react'
+import { useState, useRef, useCallback } from 'react'
 import { useAutocomplete } from '@/hooks/useAutocomplete.ts'
 import css from './PathAutocomplete.module.css'
 
@@ -23,10 +23,12 @@ export function PathAutocomplete({
 
   const { data: suggestions = [] } = useAutocomplete(value, showDropdown)
 
-  /* Reset selection when suggestions change */
-  useEffect(() => {
+  /* Reset selection when suggestions change (render-time state adjustment) */
+  const [prevSuggestions, setPrevSuggestions] = useState(suggestions)
+  if (suggestions !== prevSuggestions) {
+    setPrevSuggestions(suggestions)
     setSelectedIdx(-1)
-  }, [suggestions])
+  }
 
   const accept = useCallback(
     (item: string) => {

@@ -36,13 +36,14 @@ export function StartSessionModal() {
 
   const taskName = task?.name ?? template?.name ?? 'Session'
 
-  /* Pre-fill path from template defaultCwd on open */
-  useEffect(() => {
+  /* Pre-fill path from template defaultCwd on open (render-time state adjustment) */
+  const [prevOpen, setPrevOpen] = useState(false)
+  if (isOpen !== prevOpen) {
+    setPrevOpen(isOpen)
     if (isOpen) {
-      const defaultCwd = template?.defaultCwd ?? ''
-      setPath(defaultCwd)
+      setPath(template?.defaultCwd ?? '')
     }
-  }, [isOpen, template?.defaultCwd])
+  }
 
   /* Escape key closes modal */
   const handleKeyDown = useCallback(

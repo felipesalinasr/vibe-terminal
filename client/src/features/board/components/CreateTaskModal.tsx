@@ -15,12 +15,14 @@ export function CreateTaskModal() {
 
   const isOpen = activeModal === 'createTask'
 
-  /* Reset form when opening */
-  useEffect(() => {
+  /* Reset form when opening (render-time state adjustment) */
+  const [prevOpen, setPrevOpen] = useState(false)
+  if (isOpen !== prevOpen) {
+    setPrevOpen(isOpen)
     if (isOpen) {
       setSelectedTemplateId('')
     }
-  }, [isOpen])
+  }
 
   /* Escape key closes modal */
   const handleKeyDown = useCallback(

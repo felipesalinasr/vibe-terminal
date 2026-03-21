@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useMemo } from 'react'
 import { useAgentConfig, useUpdateAgent } from '@/hooks/useAgentConfig.ts'
 import css from './AgentEditor.module.css'
 
@@ -12,7 +12,7 @@ export function ToolsSection({ sessionId }: ToolsSectionProps) {
   const [showInput, setShowInput] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
-  const tools = data?.config.tools ?? []
+  const tools = useMemo(() => data?.config.tools ?? [], [data?.config.tools])
 
   const handleAdd = useCallback(
     (value: string) => {

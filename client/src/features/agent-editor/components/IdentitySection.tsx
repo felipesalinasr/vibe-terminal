@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
 import { useAgentConfig, useUpdatePurpose } from '@/hooks/useAgentConfig.ts'
 import css from './AgentEditor.module.css'
 
@@ -14,20 +14,21 @@ export function IdentitySection({ sessionId }: IdentitySectionProps) {
   const [showSaved, setShowSaved] = useState(false)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const savedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const initializedRef = useRef(false)
 
-  // Sync from server on first load
-  useEffect(() => {
-    if (data && !initializedRef.current) {
-      setValue(data.purpose ?? '')
-      initializedRef.current = true
-    }
-  }, [data])
+  // Render-time state adjustment: sync from server on first data arrival per session
+  const [initialized, setInitialized] = useState(false)
+  const [prevSessionId, setPrevSessionId] = useState(sessionId)
 
-  // Reset when sessionId changes
-  useEffect(() => {
-    initializedRef.current = false
-  }, [sessionId])
+  if (sessionId !== prevSessionId) {
+    setPrevSessionId(sessionId)
+    setInitialized(false)
+    setValue('')
+  }
+
+  if (data && !initialized) {
+    setInitialized(true)
+    setValue(data.purpose ?? '')
+  }
 
   const handleChange = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {

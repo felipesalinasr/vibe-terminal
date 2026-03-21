@@ -223,7 +223,7 @@ export function XtermTerminal({ sessionId }: XtermTerminalProps) {
           if (result.path) {
             // Escape special shell characters in path
             const escaped = result.path.replace(
-              /([ '"\\\(\)&;|<>$`!#])/g,
+              /([ '"\\()&;|<>$`!#])/g,
               '\\$1',
             )
             paths.push(escaped)

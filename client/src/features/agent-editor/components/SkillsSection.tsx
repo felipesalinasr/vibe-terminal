@@ -114,11 +114,17 @@ function SkillDetail({
   const [showSaved, setShowSaved] = useState(false)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const savedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const qc = useQueryClient()
+
+  // Reset loading state when folder changes (render-time state adjustment)
+  const [prevFolder, setPrevFolder] = useState(folder)
+  if (folder !== prevFolder) {
+    setPrevFolder(folder)
+    setLoading(true)
+    setContent('')
+  }
 
   useEffect(() => {
     let cancelled = false
-    setLoading(true)
     agentsApi.getSkill(sessionId, folder).then((res) => {
       if (!cancelled) {
         setContent(res.content ?? '')
@@ -147,15 +153,6 @@ function SkillDetail({
     [sessionId, folder],
   )
 
-  const handleDelete = useCallback(async () => {
-    // Delete by writing empty content (matches original behavior of removing the skill)
-    // The API doesn't have an explicit delete, so we use the write endpoint
-    // Actually we should just go back — skills are folder-based, no delete in original
-    // For now, just go back to list
-    qc.invalidateQueries({ queryKey: agentKeys.skills(sessionId) })
-    onBack()
-  }, [sessionId, qc, onBack])
-
   useEffect(() => {
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current)
@@ -172,13 +169,6 @@ function SkillDetail({
         <div className={css.sectionTitle} style={{ margin: 0 }}>
           {folder}
         </div>
-        <button
-          className={`${css.btn} ${css.btnDanger}`}
-          style={{ marginLeft: 'auto' }}
-          onClick={handleDelete}
-        >
-          Delete
-        </button>
       </div>
       <div className={css.sectionDesc}>
         Editing .claude/skills/{folder}/SKILL.md
