@@ -1,0 +1,68 @@
+/* ── KANBAN BOARD ── */
+.board {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 2px;
+  padding: 2px;
+  min-height: calc(100vh - 53px);
+  position: relative;
+  z-index: 1;
+}
+
+.column {
+  background: var(--surface);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.columnHeader {
+  padding: 14px 16px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.columnTitle {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-dim);
+}
+
+.columnCount {
+  font-size: 0.65rem;
+  color: var(--text-faint);
+  background: var(--card);
+  padding: 2px 7px;
+  border: 1px solid var(--border);
+}
+
+.columnBody {
+  flex: 1;
+  padding: 8px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.columnBody::-webkit-scrollbar { width: 4px; }
+.columnBody::-webkit-scrollbar-track { background: transparent; }
+.columnBody::-webkit-scrollbar-thumb { background: var(--border); }
+
+.dragOver {
+  background: var(--green-faint);
+  outline: 1px dashed var(--green-dim);
+  outline-offset: -4px;
+}
+
+/* ── Responsive ── */
+@media (max-width: 900px) {
+  .board {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

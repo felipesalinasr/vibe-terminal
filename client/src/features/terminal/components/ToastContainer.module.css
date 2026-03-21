@@ -1,0 +1,11 @@
+.container {
+  position: absolute;
+  bottom: 48px;
+  left: 12px;
+  right: 12px;
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 6px;
+  z-index: 50;
+  pointer-events: none;
+}

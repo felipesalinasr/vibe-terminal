@@ -1,0 +1,92 @@
+/* ── Agent Template Card ── */
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  padding: 16px 18px;
+  transition: all 0.15s;
+}
+
+.card:hover {
+  background: var(--card-hover);
+  border-color: #3a3a3a;
+}
+
+.name {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.cwd {
+  font-size: 0.68rem;
+  color: var(--text-faint);
+  margin-bottom: 8px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.purpose {
+  font-size: 0.72rem;
+  color: var(--text-dim);
+  line-height: 1.45;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  margin-bottom: 10px;
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 12px;
+}
+
+.tag {
+  font-size: 0.62rem;
+  padding: 1px 6px;
+  border: 1px solid var(--border);
+  color: var(--text-faint);
+  letter-spacing: 0.04em;
+}
+
+.actions {
+  display: flex;
+  gap: 6px;
+}
+
+.actions button {
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  padding: 4px 12px;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  background: none;
+  color: var(--text-dim);
+  transition: all 0.15s;
+}
+
+.actions button:hover {
+  border-color: var(--green-dim);
+  color: var(--text);
+}
+
+.launch {
+  background: var(--green);
+  color: var(--void);
+  border-color: var(--green);
+  font-weight: 600;
+}
+
+.launch:hover {
+  background: #66ff33;
+}
+
+.delete:hover {
+  border-color: var(--red);
+  color: var(--red);
+}

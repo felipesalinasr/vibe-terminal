@@ -1,0 +1,66 @@
+.container {
+  flex: 1;
+  overflow: hidden;
+  padding: 8px;
+  position: relative;
+}
+
+.container::-webkit-scrollbar {
+  width: 4px;
+}
+
+.container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.container::-webkit-scrollbar-thumb {
+  background: #1a1c24;
+}
+
+.terminalInner {
+  width: 100%;
+  height: 100%;
+}
+
+/* Drop overlay */
+.container.dropActive::after {
+  content: 'Drop file to attach';
+  position: absolute;
+  inset: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 255, 135, 0.04);
+  border: 2px dashed var(--green-dim);
+  border-radius: 6px;
+  color: var(--green);
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  z-index: 20;
+  pointer-events: none;
+}
+
+/* Status overlays */
+.statusOverlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  color: var(--text-dim);
+  pointer-events: none;
+  z-index: 10;
+}
+
+.connecting {
+  composes: statusOverlay;
+}
+
+.error {
+  composes: statusOverlay;
+  color: var(--red);
+}

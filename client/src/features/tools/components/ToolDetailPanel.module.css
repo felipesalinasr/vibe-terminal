@@ -1,0 +1,72 @@
+/* ── Tool Detail Panel ── */
+
+.panel {
+  background: var(--card);
+  border: 1px solid var(--green-dim);
+  border-radius: 4px;
+  padding: 14px 16px;
+  margin-bottom: 8px;
+  font-size: 0.72rem;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+.icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  background: var(--surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--text-dim);
+  flex-shrink: 0;
+}
+
+.name {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.desc {
+  color: var(--text-dim);
+  font-size: 0.65rem;
+  margin-left: auto;
+}
+
+.actionRow {
+  display: flex;
+  align-items: center;
+  padding: 5px 0;
+  font-size: 0.68rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.actionRow:last-child {
+  border-bottom: none;
+}
+
+.actionName {
+  color: var(--text);
+  flex: 1;
+}
+
+.actionMcp {
+  color: var(--text-faint);
+  font-size: 0.55rem;
+  max-width: 280px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
