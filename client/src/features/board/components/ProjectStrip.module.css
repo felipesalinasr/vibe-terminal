@@ -1,0 +1,101 @@
+/* ── PROJECT STRIP ── */
+.strip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  overflow-x: auto;
+  flex-shrink: 0;
+}
+
+.strip::-webkit-scrollbar { height: 3px; }
+.strip::-webkit-scrollbar-track { background: transparent; }
+.strip::-webkit-scrollbar-thumb { background: var(--border); }
+
+/* ── Shared pill / card base ── */
+.pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+
+.pill:hover {
+  background: var(--card-hover);
+  border-color: #3a3a3a;
+  color: var(--text);
+}
+
+.selected {
+  border-color: var(--green-dim);
+  color: var(--text);
+  box-shadow: 0 0 8px var(--green-glow), inset 0 0 8px var(--green-faint);
+}
+
+/* ── Count badge ── */
+.count {
+  font-size: 0.6rem;
+  color: var(--text-faint);
+  background: var(--surface);
+  padding: 1px 6px;
+  border: 1px solid var(--border);
+}
+
+/* ── Context icon button ── */
+.contextBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  background: none;
+  border: 1px solid transparent;
+  color: var(--text-faint);
+  font-size: 0.7rem;
+  cursor: pointer;
+  padding: 0;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+
+.contextBtn:hover {
+  color: var(--green);
+  border-color: var(--green-dim);
+}
+
+/* ── Add project pill ── */
+.addPill {
+  composes: pill;
+  border-style: dashed;
+  color: var(--text-faint);
+}
+
+.addPill:hover {
+  border-color: var(--green-dim);
+  color: var(--green);
+}
+
+/* ── Inline name input ── */
+.nameInput {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  color: var(--text);
+  background: var(--card);
+  border: 1px solid var(--green-dim);
+  outline: none;
+  padding: 5px 12px;
+  width: 140px;
+  flex-shrink: 0;
+}

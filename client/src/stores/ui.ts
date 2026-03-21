@@ -6,6 +6,10 @@ export type AgentSection = 'identity' | 'constraints' | 'skills' | 'tools' | 'fi
 export type ModalType = 'createTask' | 'template' | 'startSession' | null
 
 interface UiState {
+  contextEditorProjectId: string | null
+  openContextEditor: (projectId: string) => void
+  closeContextEditor: () => void
+
   currentView: View
   setView: (view: View) => void
 
@@ -32,6 +36,10 @@ interface UiState {
 }
 
 export const useUiStore = create<UiState>((set) => ({
+  contextEditorProjectId: null,
+  openContextEditor: (projectId) => set({ contextEditorProjectId: projectId }),
+  closeContextEditor: () => set({ contextEditorProjectId: null }),
+
   currentView: 'board',
   setView: (view) => set({ currentView: view }),
 

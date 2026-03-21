@@ -169,3 +169,12 @@
   border: 1px solid var(--border);
   letter-spacing: 0.04em;
 }
+
+.projectTag {
+  margin-left: auto;
+  padding: 1px 6px;
+  border: 1px solid var(--border);
+  letter-spacing: 0.04em;
+  color: var(--cyan);
+  opacity: 0.6;
+}

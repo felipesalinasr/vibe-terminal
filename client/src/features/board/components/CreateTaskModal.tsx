@@ -1,7 +1,8 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { useUiStore } from '@/stores/ui.ts'
 import { useBoardStore } from '@/stores/board.ts'
 import { useTemplates } from '@/hooks/useTemplates.ts'
+import { useProjectsStore } from '@/stores/projects.ts'
 import css from './CreateTaskModal.module.css'
 
 export function CreateTaskModal() {
@@ -10,8 +11,11 @@ export function CreateTaskModal() {
   const addTask = useBoardStore((s) => s.addTask)
 
   const { data: templates = [] } = useTemplates()
+  const projects = useProjectsStore((s) => s.projects)
+  const selectedProjectId = useProjectsStore((s) => s.selectedProjectId)
 
   const [selectedTemplateId, setSelectedTemplateId] = useState('')
+  const [selectedProject, setSelectedProject] = useState('')
 
   const isOpen = activeModal === 'createTask'
 
@@ -21,26 +25,23 @@ export function CreateTaskModal() {
     setPrevOpen(isOpen)
     if (isOpen) {
       setSelectedTemplateId('')
+      setSelectedProject(selectedProjectId ?? '')
     }
   }
 
   /* Escape key closes modal */
-  const handleKeyDown = useCallback(
-    (e: KeyboardEvent) => {
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
       if (e.key === 'Escape' && isOpen) {
         closeModal()
       }
-    },
-    [isOpen, closeModal],
-  )
-
-  useEffect(() => {
+    }
     document.addEventListener('keydown', handleKeyDown)
     return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [handleKeyDown])
+  }, [isOpen, closeModal])
 
   /* Create task */
-  const handleCreate = useCallback(() => {
+  function handleCreate() {
     if (!selectedTemplateId) return
 
     const template = templates.find((t) => t.id === selectedTemplateId)
@@ -50,10 +51,11 @@ export function CreateTaskModal() {
       name: template.name,
       tag: 'agent',
       templateId: template.id,
+      projectId: selectedProject || undefined,
     })
 
     closeModal()
-  }, [selectedTemplateId, templates, addTask, closeModal])
+  }
 
   return (
     <div
@@ -77,6 +79,23 @@ export function CreateTaskModal() {
           {templates.map((t) => (
             <option key={t.id} value={t.id}>
               {t.name}
+            </option>
+          ))}
+        </select>
+
+        <label className={css.label} htmlFor="taskProjectSelect">
+          project
+        </label>
+        <select
+          id="taskProjectSelect"
+          className={css.select}
+          value={selectedProject}
+          onChange={(e) => setSelectedProject(e.target.value)}
+        >
+          <option value="">-- no project --</option>
+          {projects.map((p) => (
+            <option key={p.id} value={p.id}>
+              {p.name}
             </option>
           ))}
         </select>

@@ -1,6 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { Providers } from './app/Providers.tsx'
-import { Header, KanbanBoard, SidePanel, CreateTaskModal, StartSessionModal } from './features/board/index.ts'
+import { Header, KanbanBoard, SidePanel, CreateTaskModal, StartSessionModal, ProjectStrip, ProjectContextEditor } from './features/board/index.ts'
 import { AgentsView, TemplateModal } from './features/templates/index.ts'
 import { ToolsView } from './features/tools/index.ts'
 import { useUiStore } from './stores/ui.ts'
@@ -15,6 +15,7 @@ function AppShell() {
   return (
     <>
       <Header />
+      <ProjectStrip />
       <Routes>
         <Route path="/" element={<BoardView />} />
         <Route path="/agents" element={<AgentsView />} />
@@ -25,6 +26,7 @@ function AppShell() {
       {activeModal === 'createTask' && <CreateTaskModal />}
       {activeModal === 'startSession' && <StartSessionModal />}
       {activeModal === 'template' && <TemplateModal />}
+      <ProjectContextEditor />
     </>
   )
 }

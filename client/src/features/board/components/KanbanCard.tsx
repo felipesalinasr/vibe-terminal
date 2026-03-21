@@ -51,9 +51,10 @@ function handleDragEnd(e: React.DragEvent) {
 interface SessionCardProps {
   session: SessionSummary
   columnStatus: 'active' | 'review' | 'done'
+  projectName?: string
 }
 
-export function SessionCard({ session, columnStatus }: SessionCardProps) {
+export function SessionCard({ session, columnStatus, projectName }: SessionCardProps) {
   const openPanel = useUiStore((s) => s.openPanel)
 
   const isActive = columnStatus === 'active'
@@ -95,6 +96,7 @@ export function SessionCard({ session, columnStatus }: SessionCardProps) {
       <div className={css.cardMeta}>
         <span className={css.cardTag}>{session.status}</span>
         <span>{metaTime}</span>
+        {projectName && <span className={css.projectTag}>{projectName}</span>}
       </div>
     </div>
   )
@@ -104,9 +106,10 @@ export function SessionCard({ session, columnStatus }: SessionCardProps) {
 
 interface BacklogCardProps {
   task: BacklogTask
+  projectName?: string
 }
 
-export function BacklogCard({ task }: BacklogCardProps) {
+export function BacklogCard({ task, projectName }: BacklogCardProps) {
   const openStartSession = useUiStore((s) => s.openStartSession)
   const renameTask = useBoardStore((s) => s.renameTask)
   const [editing, setEditing] = useState(false)
@@ -176,6 +179,7 @@ export function BacklogCard({ task }: BacklogCardProps) {
       <div className={css.cardMeta}>
         {task.tag && <span className={css.cardTag}>{task.tag}</span>}
         {task.templateId && <span>{task.templateId}</span>}
+        {projectName && <span className={css.projectTag}>{projectName}</span>}
       </div>
     </div>
   )

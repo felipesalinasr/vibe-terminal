@@ -31,4 +31,5 @@ export interface BacklogTask {
   name: string
   tag?: string
   templateId?: string
+  projectId?: string
 }

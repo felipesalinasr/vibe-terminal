@@ -1,6 +1,7 @@
 import { useCallback, useState } from 'react'
 import { useSessions } from '@/hooks/useSessions.ts'
 import { useBoardStore } from '@/stores/board.ts'
+import { useProjectsStore } from '@/stores/projects.ts'
 import { SessionCard, BacklogCard } from './KanbanCard.tsx'
 import type { SessionSummary, SessionStatus } from '@/types/index.ts'
 import css from './KanbanBoard.module.css'
@@ -31,6 +32,8 @@ export function KanbanBoard() {
   const { data: sessions } = useSessions()
   const backlogTasks = useBoardStore((s) => s.backlogTasks)
   const removeTask = useBoardStore((s) => s.removeTask)
+  const selectedProjectId = useProjectsStore((s) => s.selectedProjectId)
+  const projects = useProjectsStore((s) => s.projects)
 
   const [overrides, setOverrides] = useState<OverrideMap>({})
   const [dragOverCol, setDragOverCol] = useState<string | null>(null)
@@ -77,9 +80,34 @@ export function KanbanBoard() {
     [removeTask],
   )
 
+  /* ── Helpers ── */
+
+  // Map session name → backlog task to resolve projectId
+  function sessionProjectId(session: SessionSummary): string | undefined {
+    const task = backlogTasks.find((t) => t.name === session.name)
+    return task?.projectId
+  }
+
+  function projectName(projectId: string | undefined): string | undefined {
+    if (!projectId) return undefined
+    return projects.find((p) => p.id === projectId)?.name
+  }
+
   /* ── Render ── */
 
   const sessionList = sessions ?? []
+
+  // Filter by selected project
+  const filteredBacklog = selectedProjectId
+    ? backlogTasks.filter((t) => t.projectId === selectedProjectId)
+    : backlogTasks
+
+  const filteredSessions = selectedProjectId
+    ? sessionList.filter((s) => sessionProjectId(s) === selectedProjectId)
+    : sessionList
+
+  // Show project tags only when viewing all projects
+  const showProjectTags = selectedProjectId === null
 
   return (
     <div className={css.board}>
@@ -87,8 +115,8 @@ export function KanbanBoard() {
         const isBacklog = col.id === 'backlog'
         const colSessions = isBacklog
           ? []
-          : sessionList.filter((s) => sessionColumn(s) === col.id)
-        const totalCount = isBacklog ? backlogTasks.length : colSessions.length
+          : filteredSessions.filter((s) => sessionColumn(s) === col.id)
+        const totalCount = isBacklog ? filteredBacklog.length : colSessions.length
 
         return (
           <div className={css.column} key={col.id} data-col={col.id}>
@@ -103,14 +131,19 @@ export function KanbanBoard() {
               onDrop={(e) => handleDrop(e, col.id)}
             >
               {isBacklog
-                ? backlogTasks.map((task) => (
-                    <BacklogCard key={task.id} task={task} />
+                ? filteredBacklog.map((task) => (
+                    <BacklogCard
+                      key={task.id}
+                      task={task}
+                      projectName={showProjectTags ? projectName(task.projectId) : undefined}
+                    />
                   ))
                 : colSessions.map((session) => (
                     <SessionCard
                       key={session.id}
                       session={session}
                       columnStatus={col.id as 'active' | 'review' | 'done'}
+                      projectName={showProjectTags ? projectName(sessionProjectId(session)) : undefined}
                     />
                   ))}
             </div>

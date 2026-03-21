@@ -4,7 +4,7 @@
   grid-template-columns: repeat(4, 1fr);
   gap: 2px;
   padding: 2px;
-  min-height: calc(100vh - 53px);
+  min-height: calc(100vh - 53px - 48px);
   position: relative;
   z-index: 1;
 }
