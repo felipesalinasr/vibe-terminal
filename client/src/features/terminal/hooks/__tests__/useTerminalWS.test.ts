@@ -181,8 +181,9 @@ describe('useTerminalWS', () => {
     })
   })
 
-  describe('reconnect suppresses scrollback', () => {
-    it('goes directly to ready on reconnect scrollback (no hydrating)', () => {
+  describe('reconnect delivers scrollback', () => {
+    it('reaches ready and delivers scrollback message to handlers on reconnect', () => {
+      const handler = vi.fn()
       const { result } = renderHook(
         ({ sid, enabled }) => useTerminalWS({ sessionId: sid, enabled }),
         {
@@ -191,17 +192,21 @@ describe('useTerminalWS', () => {
         },
       )
 
+      act(() => {
+        result.current.onMessage(handler)
+      })
+
       const ws1 = MockWebSocket._latest()
       act(() => ws1._simulateOpen())
       act(() => {
         ws1._simulateMessage({ type: 'scrollback', data: 'initial' })
       })
       expect(result.current.state).toBe('ready')
+      expect(handler).toHaveBeenCalledWith({ type: 'scrollback', data: 'initial' })
+      handler.mockClear()
 
       // Simulate a close which triggers reconnect
       act(() => ws1._simulateClose())
-
-      // Should be connecting (reconnect pending)
       expect(result.current.state).toBe('connecting')
 
       // Advance past reconnect delay
@@ -209,15 +214,50 @@ describe('useTerminalWS', () => {
 
       const ws2 = MockWebSocket._latest()
       expect(ws2).not.toBe(ws1)
-
       act(() => ws2._simulateOpen())
 
-      // Reconnect receives scrollback - should suppress and go directly to ready
+      // Reconnect receives scrollback — must be delivered (not suppressed)
       act(() => {
-        ws2._simulateMessage({ type: 'scrollback', data: 'replay' })
+        ws2._simulateMessage({ type: 'scrollback', data: 'initial plus new' })
       })
 
       expect(result.current.state).toBe('ready')
+      // The scrollback message must reach the handler so the terminal can reconcile
+      expect(handler).toHaveBeenCalledWith({ type: 'scrollback', data: 'initial plus new' })
+    })
+
+    it('skips hydrating state on reconnect scrollback', () => {
+      const stateLog: string[] = []
+
+      const { result } = renderHook(
+        ({ sid, enabled }) => {
+          const hook = useTerminalWS({ sessionId: sid, enabled })
+          stateLog.push(hook.state)
+          return hook
+        },
+        {
+          wrapper: createWrapper(),
+          initialProps: { sid: 'sess-1', enabled: true },
+        },
+      )
+
+      const ws1 = MockWebSocket._latest()
+      act(() => ws1._simulateOpen())
+      act(() => ws1._simulateMessage({ type: 'scrollback', data: 'x' }))
+
+      // Clear log before reconnect
+      stateLog.length = 0
+
+      act(() => ws1._simulateClose())
+      act(() => vi.advanceTimersByTime(1500))
+
+      const ws2 = MockWebSocket._latest()
+      act(() => ws2._simulateOpen())
+      act(() => ws2._simulateMessage({ type: 'scrollback', data: 'x' }))
+
+      expect(result.current.state).toBe('ready')
+      // Should NOT have passed through 'hydrating' during reconnect
+      expect(stateLog).not.toContain('hydrating')
     })
   })
 

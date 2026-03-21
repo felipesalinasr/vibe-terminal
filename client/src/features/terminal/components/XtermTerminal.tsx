@@ -3,6 +3,7 @@ import { Terminal } from '@xterm/xterm'
 import { FitAddon } from '@xterm/addon-fit'
 import '@xterm/xterm/css/xterm.css'
 import { useTerminalWS } from '../hooks/useTerminalWS.ts'
+import { reconcileScrollback } from '../reconcileScrollback.ts'
 import type { TerminalInboundMessage } from '@/types/ws.ts'
 import { dropFile } from '@/api/files.ts'
 import { ToastContainer } from './ToastContainer.tsx'
@@ -44,6 +45,11 @@ export function XtermTerminal({ sessionId }: XtermTerminalProps) {
   const fitAddonRef = useRef<FitAddon | null>(null)
   const dropCounterRef = useRef(0)
 
+  // Tracks only server-provided terminal bytes (scrollback + output).
+  // UI-only text like [Process exited] is NOT appended here so it
+  // doesn't pollute reconciliation comparisons on reconnect.
+  const serverBufferRef = useRef('')
+
   const [dropActive, setDropActive] = useState(false)
   const [filePaths, setFilePaths] = useState<string[]>([])
   const [showHistorical, setShowHistorical] = useState(false)
@@ -52,6 +58,18 @@ export function XtermTerminal({ sessionId }: XtermTerminalProps) {
     sessionId,
     enabled: true,
   })
+
+  // Reset per-session state when sessionId changes.
+  // State values use render-time adjustment; ref resets go in an effect.
+  const [prevSessionId, setPrevSessionId] = useState(sessionId)
+  if (sessionId !== prevSessionId) {
+    setPrevSessionId(sessionId)
+    setShowHistorical(false)
+    setFilePaths([])
+  }
+  useEffect(() => {
+    serverBufferRef.current = ''
+  }, [sessionId])
 
   // Initialize xterm.js on mount
   useEffect(() => {
@@ -136,9 +154,32 @@ export function XtermTerminal({ sessionId }: XtermTerminalProps) {
       if (!term) return
 
       switch (msg.type) {
-        case 'output':
-        case 'scrollback': {
+        case 'output': {
           term.write(msg.data)
+          serverBufferRef.current += msg.data
+          break
+        }
+
+        case 'scrollback': {
+          // Server sends full scrollback snapshot on every WS connect.
+          // Reconcile against what we've already rendered to avoid
+          // duplicating content while still recovering missed output.
+          const result = reconcileScrollback(msg.data, serverBufferRef.current)
+          switch (result.action) {
+            case 'write-full':
+              term.write(result.data)
+              break
+            case 'write-delta':
+              term.write(result.data)
+              break
+            case 'reset-and-write':
+              term.reset()
+              term.write(result.data)
+              break
+            case 'skip':
+              break
+          }
+          serverBufferRef.current = msg.data
           break
         }
 
@@ -149,6 +190,8 @@ export function XtermTerminal({ sessionId }: XtermTerminalProps) {
         }
 
         case 'exit': {
+          // Write banner to terminal but NOT to serverBufferRef —
+          // this is UI-only text that must not affect reconciliation.
           term.write('\r\n\x1b[2m[Process exited]\x1b[0m\r\n')
           break
         }

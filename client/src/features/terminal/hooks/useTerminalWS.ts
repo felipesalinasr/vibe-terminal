@@ -137,18 +137,16 @@ export function useTerminalWS({
 
       switch (msg.type) {
         case 'scrollback': {
-          // Fix #23: On reconnect, the terminal already has content.
-          // Suppress the server's scrollback to avoid duplication.
-          if (isReconnectRef.current) {
-            hasReceivedScrollbackRef.current = true
-            setStateAndRef('ready')
-            break
-          }
-
           if (!hasReceivedScrollbackRef.current) {
             hasReceivedScrollbackRef.current = true
-            setStateAndRef('hydrating')
+            // On reconnect, skip the visible hydrating state to avoid UI flicker.
+            // On first connect, show hydrating briefly.
+            if (!isReconnectRef.current) {
+              setStateAndRef('hydrating')
+            }
           }
+          // Always deliver scrollback to the terminal component.
+          // Reconciliation (dedup / delta) is handled in the rendering layer.
           broadcast(msg)
           setStateAndRef('ready')
           break
