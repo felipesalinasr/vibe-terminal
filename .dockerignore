@@ -1,4 +1,6 @@
 node_modules
+client/node_modules
+client/dist
 .git
 .github
 .env
@@ -12,4 +14,7 @@ docs
 templates/tpl-*.json
 server/connectors-catalog.json
 server/**/*.test.js
+client/**/*.test.ts
+client/**/*.test.tsx
 vitest.config.js
+client/vitest.config.ts

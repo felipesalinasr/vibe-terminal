@@ -1,0 +1,73 @@
+/* ── Tool Card ── */
+
+.card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  margin-bottom: 4px;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-size: 0.72rem;
+}
+
+.card:hover {
+  background: var(--card-hover);
+  border-color: var(--green-dim);
+}
+
+.expanded {
+  border-color: var(--green);
+  background: var(--card-hover);
+}
+
+.icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  background: var(--surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--text-dim);
+  flex-shrink: 0;
+}
+
+.name {
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.desc {
+  color: var(--text-dim);
+  font-size: 0.65rem;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.badge {
+  font-size: 0.58rem;
+  padding: 2px 6px;
+  border-radius: 2px;
+  background: var(--border);
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+
+.chevron {
+  color: var(--text-faint);
+  font-size: 0.7rem;
+  transition: transform 0.15s;
+}
+
+.expanded .chevron {
+  transform: rotate(90deg);
+}

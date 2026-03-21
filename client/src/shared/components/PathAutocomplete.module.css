@@ -1,0 +1,55 @@
+/* ── Path Autocomplete ── */
+
+.wrapper {
+  position: relative;
+}
+
+.input {
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  width: 100%;
+  padding: 8px 12px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.input:focus {
+  border-color: var(--green-dim);
+}
+
+.input::placeholder {
+  color: var(--text-faint);
+}
+
+.list {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 100%;
+  background: var(--card);
+  border: 1px solid var(--border);
+  max-height: 160px;
+  overflow-y: auto;
+  z-index: 10;
+  display: none;
+}
+
+.listVisible {
+  display: block;
+}
+
+.item {
+  padding: 6px 12px;
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  cursor: pointer;
+}
+
+.item:hover,
+.itemSelected {
+  background: var(--card-hover);
+  color: var(--text);
+}

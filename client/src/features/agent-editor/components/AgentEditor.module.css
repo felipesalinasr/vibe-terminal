@@ -1,0 +1,459 @@
+/* ── Agent Editor Layout ── */
+
+.wrapper {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* ── Sidebar Nav ── */
+
+.sidebar {
+  width: 130px;
+  flex-shrink: 0;
+  border-right: 1px solid #1a1c24;
+  padding: 8px 0;
+  background: #06080c;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.navItem {
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  color: #505868;
+  padding: 8px 16px;
+  cursor: pointer;
+  border: none;
+  background: none;
+  text-align: left;
+  transition: all 0.15s;
+  letter-spacing: 0.04em;
+  border-left: 2px solid transparent;
+}
+
+.navItem:hover {
+  color: var(--text-dim);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.navItemActive {
+  color: var(--green);
+  background: rgba(51, 255, 0, 0.04);
+  border-left-color: var(--green);
+}
+
+/* ── Content Area ── */
+
+.content {
+  flex: 1;
+  padding: 20px 24px;
+  overflow-y: auto;
+}
+
+.content::-webkit-scrollbar {
+  width: 4px;
+}
+
+.content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.content::-webkit-scrollbar-thumb {
+  background: #1a1c24;
+}
+
+/* ── Section Header ── */
+
+.sectionTitle {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-dim);
+  margin-bottom: 8px;
+}
+
+.sectionDesc {
+  font-size: 0.68rem;
+  color: var(--text-faint);
+  margin-bottom: 16px;
+  line-height: 1.5;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.sectionHeader .sectionTitle {
+  margin: 0;
+}
+
+/* ── Textarea ── */
+
+.textarea {
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  width: 100%;
+  min-height: 240px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 12px;
+  resize: vertical;
+  outline: none;
+  line-height: 1.6;
+  transition: border-color 0.15s;
+  box-sizing: border-box;
+}
+
+.textarea:focus {
+  border-color: var(--green-dim);
+}
+
+.textareaTall {
+  min-height: 300px;
+}
+
+/* ── Save Indicator ── */
+
+.saveIndicator {
+  font-family: var(--mono);
+  font-size: 0.62rem;
+  color: var(--green-dim);
+  opacity: 0;
+  transition: opacity 0.2s;
+  margin-top: 6px;
+}
+
+.saveIndicatorVisible {
+  opacity: 1;
+}
+
+/* ── Tag / Chip Lists ── */
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  font-size: 0.72rem;
+  color: var(--text-dim);
+  background: var(--card);
+  letter-spacing: 0.04em;
+}
+
+.tagRemove {
+  color: var(--text-faint);
+  cursor: pointer;
+  font-size: 0.85rem;
+  line-height: 1;
+  transition: color 0.15s;
+  background: none;
+  border: none;
+  padding: 0;
+}
+
+.tagRemove:hover {
+  color: var(--red);
+}
+
+.tagAdd {
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  color: var(--green-dim);
+  background: none;
+  border: 1px dashed var(--border);
+  padding: 4px 10px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.tagAdd:hover {
+  border-color: var(--green-dim);
+}
+
+.tagInput {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  padding: 4px 10px;
+  background: var(--card);
+  border: 1px solid var(--green-dim);
+  color: var(--text);
+  outline: none;
+  width: 160px;
+}
+
+.tagInputWide {
+  width: 100%;
+}
+
+/* ── File List ── */
+
+.fileItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
+  border-bottom: 1px solid #1a1c24;
+  font-size: 0.72rem;
+}
+
+.fileName {
+  flex: 1;
+  color: var(--text-dim);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fileNameClickable {
+  color: var(--text);
+  cursor: pointer;
+}
+
+.fileActions {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.fileDesc {
+  font-size: 0.62rem;
+  color: var(--text-faint);
+  flex-shrink: 0;
+  max-width: 50%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── Small Button (file-toast-btn equivalent) ── */
+
+.btn {
+  font-family: var(--mono);
+  font-size: 0.62rem;
+  padding: 3px 8px;
+  background: transparent;
+  border: 1px solid #1e2230;
+  color: #707a90;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.btn:hover {
+  border-color: var(--green-dim);
+  color: var(--green);
+}
+
+.btnDanger {
+  color: var(--red);
+}
+
+.btnDanger:hover {
+  border-color: var(--red);
+  color: var(--red);
+}
+
+.btnGreen {
+  color: var(--green-dim);
+  border-color: var(--green-dim);
+  padding: 6px 16px;
+}
+
+.btnGreen:hover {
+  color: var(--green);
+  border-color: var(--green);
+}
+
+/* ── Back Link ── */
+
+.backRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+/* ── Knowledge Upload Zone ── */
+
+.uploadZone {
+  border: 1px dashed var(--border);
+  padding: 20px;
+  text-align: center;
+  font-size: 0.7rem;
+  color: var(--text-faint);
+  cursor: pointer;
+  transition: all 0.15s;
+  margin-top: 12px;
+}
+
+.uploadZone:hover {
+  border-color: var(--green-dim);
+  color: var(--text-dim);
+}
+
+.uploadZoneDragOver {
+  border-color: var(--green);
+  background: rgba(51, 255, 0, 0.04);
+}
+
+.uploadLabel {
+  color: var(--green-dim);
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.uploadInput {
+  display: none;
+}
+
+/* ── Memory & Audit Entries ── */
+
+.entry {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.72rem;
+  line-height: 1.5;
+}
+
+.entry:last-child {
+  border-bottom: none;
+}
+
+.badge {
+  font-family: var(--mono);
+  font-size: 0.6rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 2px 6px;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+/* Memory badge variants */
+.badgeMemory {
+  background: rgba(0, 212, 255, 0.1);
+  color: var(--cyan);
+  border: 1px solid rgba(0, 212, 255, 0.2);
+}
+
+.badgeConvention {
+  background: rgba(51, 255, 0, 0.08);
+  color: var(--green-dim);
+  border-color: rgba(51, 255, 0, 0.15);
+}
+
+.badgeCorrection {
+  background: rgba(255, 92, 87, 0.08);
+  color: var(--red);
+  border-color: rgba(255, 92, 87, 0.15);
+}
+
+.badgeDecision {
+  background: rgba(245, 191, 79, 0.08);
+  color: var(--amber);
+  border-color: rgba(245, 191, 79, 0.15);
+}
+
+.badgePreference {
+  background: rgba(199, 146, 234, 0.08);
+  color: #c792ea;
+  border-color: rgba(199, 146, 234, 0.15);
+}
+
+/* Audit badge variants */
+.badgeAudit {
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-dim);
+  border: 1px solid var(--border);
+}
+
+.badgeSessionStart {
+  color: var(--green-dim);
+  border-color: rgba(51, 255, 0, 0.15);
+}
+
+.badgeFileWrite {
+  color: var(--cyan);
+  border-color: rgba(0, 212, 255, 0.15);
+}
+
+.badgeSkillInstall {
+  color: var(--amber);
+  border-color: rgba(245, 191, 79, 0.15);
+}
+
+.entryContent {
+  color: var(--text);
+  flex: 1;
+  min-width: 0;
+}
+
+.entryTs {
+  color: var(--text-faint);
+  font-size: 0.62rem;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+/* ── Empty State ── */
+
+.empty {
+  padding: 32px 16px;
+  text-align: center;
+  color: var(--text-faint);
+  font-size: 0.72rem;
+}
+
+/* ── Add Skill Form ── */
+
+.formLabel {
+  font-size: 0.68rem;
+  color: var(--text-faint);
+  display: block;
+  margin-bottom: 4px;
+}
+
+.formInput {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  padding: 4px 10px;
+  background: var(--card);
+  border: 1px solid var(--green-dim);
+  color: var(--text);
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+  margin-bottom: 12px;
+}
+
+/* ── Loading ── */
+
+.loading {
+  color: var(--text-faint);
+  font-size: 0.72rem;
+}
+
+@media (max-width: 700px) {
+  .sidebar {
+    width: 100px;
+  }
+}

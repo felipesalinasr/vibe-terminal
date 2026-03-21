@@ -1,0 +1,128 @@
+/* ── Start Session Modal ── */
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: all 0.2s;
+}
+
+.overlayOpen {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+.modal {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  width: 400px;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 24px;
+  position: relative;
+}
+
+.title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--green);
+  margin-bottom: 4px;
+}
+
+.subtitle {
+  font-size: 0.7rem;
+  color: var(--text-dim);
+  margin-bottom: 20px;
+}
+
+.label {
+  display: block;
+  font-size: 0.7rem;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 6px;
+}
+
+.dirRow {
+  display: flex;
+  gap: 6px;
+  align-items: stretch;
+}
+
+.dirRow .pathWrapper {
+  flex: 1;
+}
+
+.browseBtn {
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  padding: 0 12px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.browseBtn:hover {
+  border-color: var(--green-dim);
+  color: var(--text);
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 16px;
+}
+
+.actions button {
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  padding: 7px 16px;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  transition: all 0.15s;
+}
+
+.btnCancel {
+  background: transparent;
+  color: var(--text-dim);
+}
+
+.btnCancel:hover {
+  border-color: var(--text-dim);
+  color: var(--text);
+}
+
+.btnSkip {
+  background: transparent;
+  color: var(--text-faint);
+  border: 1px solid transparent;
+}
+
+.btnSkip:hover {
+  color: var(--text-dim);
+  border-color: var(--border);
+}
+
+.btnCreate {
+  background: var(--green);
+  color: var(--void);
+  border-color: var(--green);
+  font-weight: 600;
+}
+
+.btnCreate:hover {
+  background: #66ff33;
+}

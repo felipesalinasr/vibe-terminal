@@ -1,0 +1,20 @@
+:root {
+  --void: #000000;
+  --surface: #0a0a0a;
+  --card: #141414;
+  --card-hover: #1c1c1c;
+  --border: #2a2a2a;
+  --border-glow: #00ff4120;
+  --green: #33ff00;
+  --green-dim: #2ad100;
+  --green-glow: #33ff0040;
+  --green-faint: #33ff0008;
+  --cyan: #00d4ff;
+  --amber: #f5bf4f;
+  --red: #ff5c57;
+  --text: #f2f2f2;
+  --text-dim: #808080;
+  --text-faint: #3a3a3a;
+  --panel-bg: #0a0c10;
+  --mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+}

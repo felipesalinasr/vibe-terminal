@@ -1,0 +1,6 @@
+export { Header } from './components/Header.tsx'
+export { KanbanBoard } from './components/KanbanBoard.tsx'
+export { SessionCard, BacklogCard } from './components/KanbanCard.tsx'
+export { SidePanel } from './components/SidePanel.tsx'
+export { CreateTaskModal } from './components/CreateTaskModal.tsx'
+export { StartSessionModal } from './components/StartSessionModal.tsx'

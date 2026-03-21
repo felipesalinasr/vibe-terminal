@@ -1,0 +1,54 @@
+/* ── Agents Grid View ── */
+
+.view {
+  padding: 24px;
+  min-height: calc(100vh - 53px);
+  position: relative;
+  z-index: 1;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
+}
+
+.addCard {
+  background: transparent;
+  border: 1px dashed var(--border);
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 160px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.addCard:hover {
+  border-color: var(--green-dim);
+  background: rgba(51, 255, 0, 0.03);
+}
+
+.addIcon {
+  font-size: 1.8rem;
+  color: var(--text-faint);
+  line-height: 1;
+  margin-bottom: 8px;
+  transition: color 0.15s;
+}
+
+.addCard:hover .addIcon {
+  color: var(--green-dim);
+}
+
+.addLabel {
+  font-size: 0.72rem;
+  color: var(--text-faint);
+  transition: color 0.15s;
+}
+
+.addCard:hover .addLabel {
+  color: var(--text-dim);
+}

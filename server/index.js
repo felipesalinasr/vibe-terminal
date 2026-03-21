@@ -3,6 +3,7 @@ import { createServer } from 'http';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { readFile } from 'fs/promises';
+import { existsSync } from 'fs';
 import { errorHandler } from './middleware/error-handler.js';
 import { requestLogger } from './middleware/request-logger.js';
 import { sessionRoutes } from './routes/sessions.js';
@@ -39,7 +40,12 @@ const PORT = process.env.PORT || 8765;
 app.use((req, res, next) => { res.setHeader('X-Content-Type-Options', 'nosniff'); next(); });
 app.use(express.json());
 app.use(requestLogger);
-app.use(express.static(join(__dirname, '..', 'public')));
+// ── Static files ──
+// Serve React build if available, fallback to legacy public/
+const clientDist = join(__dirname, '..', 'client', 'dist');
+const legacyPublic = join(__dirname, '..', 'public');
+const staticDir = existsSync(clientDist) ? clientDist : legacyPublic;
+app.use(express.static(staticDir));
 
 // ── Routes ──
 app.use('/api', sessionRoutes());
@@ -57,6 +63,13 @@ app.use('/api', (req, res) => {
 
 // Centralized error handler (must be last middleware)
 app.use(errorHandler);
+
+// SPA fallback: serve index.html for non-API, non-WS routes (React Router)
+if (existsSync(clientDist)) {
+  app.get('*', (req, res) => {
+    res.sendFile(join(clientDist, 'index.html'));
+  });
+}
 
 // ── WebSocket ──
 setupWebSocket(server);

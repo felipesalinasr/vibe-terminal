@@ -5,10 +5,15 @@
   "type": "module",
   "scripts": {
     "start": "node server/index.js",
-    "dev": "node --watch server/index.js",
+    "dev:server": "node --watch server/index.js",
+    "dev:client": "cd client && npx vite",
+    "dev": "concurrently -n server,client -c blue,green \"npm run dev:server\" \"npm run dev:client\"",
+    "build:client": "cd client && npm run build",
+    "build": "npm run build:client",
     "test": "vitest run",
+    "test:client": "cd client && npx vitest run",
     "test:watch": "vitest",
-    "check": "node --check server/index.js && vitest run"
+    "check": "node --check server/index.js && vitest run && cd client && npx eslint src/ && npx vitest run && npm run build"
   },
   "dependencies": {
     "express": "^4.21.0",
@@ -18,6 +23,7 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "concurrently": "^9.2.1",
     "supertest": "^7.2.2",
     "vitest": "^4.1.0"
   }
