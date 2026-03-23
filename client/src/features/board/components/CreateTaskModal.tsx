@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useUiStore } from '@/stores/ui.ts'
 import { useBoardStore } from '@/stores/board.ts'
 import { useTemplates } from '@/hooks/useTemplates.ts'
+import { useProjects } from '@/hooks/useProjects.ts'
 import { useProjectsStore } from '@/stores/projects.ts'
 import css from './CreateTaskModal.module.css'
 
@@ -11,7 +12,7 @@ export function CreateTaskModal() {
   const addTask = useBoardStore((s) => s.addTask)
 
   const { data: templates = [] } = useTemplates()
-  const projects = useProjectsStore((s) => s.projects)
+  const { data: projects = [] } = useProjects()
   const selectedProjectId = useProjectsStore((s) => s.selectedProjectId)
 
   const [selectedTemplateId, setSelectedTemplateId] = useState('')

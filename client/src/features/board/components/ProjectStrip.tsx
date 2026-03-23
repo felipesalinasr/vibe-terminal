@@ -1,43 +1,21 @@
-import { useState, useRef, useEffect } from 'react'
 import { useProjectsStore } from '@/stores/projects.ts'
 import { useUiStore } from '@/stores/ui.ts'
 import { useSessions } from '@/hooks/useSessions.ts'
 import { useBoardStore } from '@/stores/board.ts'
+import { useProjects } from '@/hooks/useProjects.ts'
 import css from './ProjectStrip.module.css'
 
 export function ProjectStrip() {
-  const projects = useProjectsStore((s) => s.projects)
+  const { data: projects = [] } = useProjects()
   const selectedId = useProjectsStore((s) => s.selectedProjectId)
   const selectProject = useProjectsStore((s) => s.selectProject)
-  const addProject = useProjectsStore((s) => s.addProject)
   const openContextEditor = useUiStore((s) => s.openContextEditor)
+  const openModal = useUiStore((s) => s.openModal)
   const { data: sessions } = useSessions()
   const backlogTasks = useBoardStore((s) => s.backlogTasks)
 
-  const [adding, setAdding] = useState(false)
-  const [newName, setNewName] = useState('')
-  const inputRef = useRef<HTMLInputElement>(null)
-
-  useEffect(() => {
-    if (adding) {
-      inputRef.current?.focus()
-    }
-  }, [adding])
-
-  function handleAdd() {
-    const trimmed = newName.trim()
-    if (trimmed) {
-      addProject(trimmed)
-    }
-    setNewName('')
-    setAdding(false)
-  }
-
   function countForProject(projectId: string): number {
-    const sessionCount = sessions?.filter((s) => {
-      const task = backlogTasks.find((t) => t.name === s.name)
-      return task?.projectId === projectId
-    }).length ?? 0
+    const sessionCount = sessions?.filter((s) => s.projectId === projectId).length ?? 0
     const backlogCount = backlogTasks.filter((t) => t.projectId === projectId).length
     return sessionCount + backlogCount
   }
@@ -79,24 +57,9 @@ export function ProjectStrip() {
       })}
 
       {/* Add new project */}
-      {adding ? (
-        <input
-          ref={inputRef}
-          className={css.nameInput}
-          value={newName}
-          onChange={(e) => setNewName(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') handleAdd()
-            if (e.key === 'Escape') { setAdding(false); setNewName('') }
-          }}
-          onBlur={handleAdd}
-          placeholder="project name"
-        />
-      ) : (
-        <button className={css.addPill} onClick={() => setAdding(true)}>
-          + New Project
-        </button>
-      )}
+      <button className={css.addPill} onClick={() => openModal('createProject')}>
+        + New Project
+      </button>
     </div>
   )
 }

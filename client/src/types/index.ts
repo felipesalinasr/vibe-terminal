@@ -1,6 +1,7 @@
 export * from './session.ts'
 export * from './agent.ts'
 export * from './template.ts'
+export * from './project.ts'
 export * from './connector.ts'
 export * from './api.ts'
 export * from './ws.ts'

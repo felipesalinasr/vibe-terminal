@@ -2,6 +2,7 @@ import { useCallback, useState } from 'react'
 import { useSessions } from '@/hooks/useSessions.ts'
 import { useBoardStore } from '@/stores/board.ts'
 import { useProjectsStore } from '@/stores/projects.ts'
+import { useProjects } from '@/hooks/useProjects.ts'
 import { SessionCard, BacklogCard } from './KanbanCard.tsx'
 import type { SessionSummary, SessionStatus } from '@/types/index.ts'
 import css from './KanbanBoard.module.css'
@@ -33,7 +34,7 @@ export function KanbanBoard() {
   const backlogTasks = useBoardStore((s) => s.backlogTasks)
   const removeTask = useBoardStore((s) => s.removeTask)
   const selectedProjectId = useProjectsStore((s) => s.selectedProjectId)
-  const projects = useProjectsStore((s) => s.projects)
+  const { data: projects = [] } = useProjects()
 
   const [overrides, setOverrides] = useState<OverrideMap>({})
   const [dragOverCol, setDragOverCol] = useState<string | null>(null)
@@ -82,13 +83,7 @@ export function KanbanBoard() {
 
   /* ── Helpers ── */
 
-  // Map session name → backlog task to resolve projectId
-  function sessionProjectId(session: SessionSummary): string | undefined {
-    const task = backlogTasks.find((t) => t.name === session.name)
-    return task?.projectId
-  }
-
-  function projectName(projectId: string | undefined): string | undefined {
+  function projectName(projectId: string | undefined | null): string | undefined {
     if (!projectId) return undefined
     return projects.find((p) => p.id === projectId)?.name
   }
@@ -103,7 +98,7 @@ export function KanbanBoard() {
     : backlogTasks
 
   const filteredSessions = selectedProjectId
-    ? sessionList.filter((s) => sessionProjectId(s) === selectedProjectId)
+    ? sessionList.filter((s) => s.projectId === selectedProjectId)
     : sessionList
 
   // Show project tags only when viewing all projects
@@ -143,7 +138,7 @@ export function KanbanBoard() {
                       key={session.id}
                       session={session}
                       columnStatus={col.id as 'active' | 'review' | 'done'}
-                      projectName={showProjectTags ? projectName(sessionProjectId(session)) : undefined}
+                      projectName={showProjectTags ? projectName(session.projectId) : undefined}
                     />
                   ))}
             </div>

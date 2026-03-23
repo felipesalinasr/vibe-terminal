@@ -29,6 +29,12 @@ export const API = {
   templates: '/api/templates',
   template: (id: string) => `/api/templates/${id}`,
 
+  // Projects
+  projects: '/api/projects',
+  project: (id: string) => `/api/projects/${id}`,
+  projectSetup: (id: string) => `/api/projects/${id}/setup`,
+  githubStatus: '/api/projects/github-status',
+
   // Connectors
   connectorCatalog: '/api/connectors/catalog',
   connectorSync: '/api/connectors/sync',

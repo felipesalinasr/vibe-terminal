@@ -3,7 +3,7 @@ import { create } from 'zustand'
 export type View = 'board' | 'agents' | 'tools'
 export type PanelTab = 'terminal' | 'agent'
 export type AgentSection = 'identity' | 'constraints' | 'skills' | 'tools' | 'files' | 'knowledge' | 'memory' | 'audit'
-export type ModalType = 'createTask' | 'template' | 'startSession' | null
+export type ModalType = 'createTask' | 'template' | 'startSession' | 'createProject' | null
 
 interface UiState {
   contextEditorProjectId: string | null

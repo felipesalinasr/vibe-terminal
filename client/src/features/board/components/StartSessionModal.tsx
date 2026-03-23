@@ -75,6 +75,7 @@ export function StartSessionModal() {
         name: taskName,
         cwd: cwd || '~/',
         templateId: templateId ?? undefined,
+        projectId: task?.projectId,
       })
 
       /* Remove from backlog if it came from a card */
@@ -85,7 +86,7 @@ export function StartSessionModal() {
       closeModal()
       openPanel(session.id)
     },
-    [taskName, templateId, startSessionCardId, createSession, removeTask, closeModal, openPanel],
+    [taskName, templateId, task?.projectId, startSessionCardId, createSession, removeTask, closeModal, openPanel],
   )
 
   const handleSubmit = useCallback(() => {

@@ -1,13 +1,9 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { Providers } from './app/Providers.tsx'
-import { Header, KanbanBoard, SidePanel, CreateTaskModal, StartSessionModal, ProjectStrip, ProjectContextEditor } from './features/board/index.ts'
+import { Header, KanbanBoard, SidePanel, CreateTaskModal, StartSessionModal, CreateProjectModal, ProjectStrip, ProjectContextEditor } from './features/board/index.ts'
 import { AgentsView, TemplateModal } from './features/templates/index.ts'
 import { ToolsView } from './features/tools/index.ts'
 import { useUiStore } from './stores/ui.ts'
-
-function BoardView() {
-  return <KanbanBoard />
-}
 
 function AppShell() {
   const activeModal = useUiStore((s) => s.activeModal)
@@ -17,7 +13,7 @@ function AppShell() {
       <Header />
       <ProjectStrip />
       <Routes>
-        <Route path="/" element={<BoardView />} />
+        <Route path="/" element={<KanbanBoard />} />
         <Route path="/agents" element={<AgentsView />} />
         <Route path="/tools" element={<ToolsView />} />
         <Route path="*" element={<Navigate to="/" replace />} />
@@ -25,6 +21,7 @@ function AppShell() {
       <SidePanel />
       {activeModal === 'createTask' && <CreateTaskModal />}
       {activeModal === 'startSession' && <StartSessionModal />}
+      {activeModal === 'createProject' && <CreateProjectModal />}
       {activeModal === 'template' && <TemplateModal />}
       <ProjectContextEditor />
     </>

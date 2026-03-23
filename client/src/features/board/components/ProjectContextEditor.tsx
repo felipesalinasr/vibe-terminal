@@ -1,15 +1,15 @@
 import { useEffect, useRef, useState } from 'react'
 import { useUiStore } from '@/stores/ui.ts'
-import { useProjectsStore } from '@/stores/projects.ts'
+import { useProjects, useUpdateProject } from '@/hooks/useProjects.ts'
 import css from './ProjectContextEditor.module.css'
 
 export function ProjectContextEditor() {
   const projectId = useUiStore((s) => s.contextEditorProjectId)
   const close = useUiStore((s) => s.closeContextEditor)
-  const project = useProjectsStore((s) =>
-    s.projects.find((p) => p.id === projectId),
-  )
-  const updateContext = useProjectsStore((s) => s.updateContext)
+  const { data: projects = [] } = useProjects()
+  const updateProject = useUpdateProject()
+
+  const project = projects.find((p) => p.id === projectId)
 
   const [draft, setDraft] = useState('')
   const [saved, setSaved] = useState(false)
@@ -24,11 +24,12 @@ export function ProjectContextEditor() {
   }
 
   // Auto-save on draft change (debounced)
+  const mutate = updateProject.mutate
   useEffect(() => {
     if (!projectId) return
     if (timerRef.current) clearTimeout(timerRef.current)
     timerRef.current = setTimeout(() => {
-      updateContext(projectId, draft)
+      mutate({ id: projectId, input: { context: draft } })
       setSaved(true)
       // Clear "saved" indicator after 2s
       setTimeout(() => setSaved(false), 2000)
@@ -36,7 +37,7 @@ export function ProjectContextEditor() {
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current)
     }
-  }, [draft, projectId, updateContext])
+  }, [draft, projectId, mutate])
 
   // Close on Escape
   useEffect(() => {

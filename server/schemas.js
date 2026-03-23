@@ -4,6 +4,7 @@ export const createSessionSchema = z.object({
   name: z.string().min(1, 'name is required').max(200),
   cwd: z.string().optional(),
   templateId: z.string().optional(),
+  projectId: z.string().optional(),
 });
 
 export const updateAgentSchema = z.object({
@@ -42,6 +43,22 @@ export const createTemplateSchema = z.object({
 }).passthrough();
 
 export const updateTemplateSchema = createTemplateSchema.partial();
+
+export const createProjectSchema = z.object({
+  name: z.string().min(1, 'name is required').max(200),
+  description: z.string().max(500).optional().default(''),
+  path: z.string().optional().default(''),
+});
+
+export const setupProjectSchema = z.object({
+  createRepo: z.boolean().optional().default(false),
+  repoPrivate: z.boolean().optional().default(true),
+});
+
+export const updateProjectSchema = z.object({
+  name: z.string().min(1).max(200).optional(),
+  context: z.string().optional(),
+});
 
 export const skillWriteSchema = z.object({
   content: z.string(),

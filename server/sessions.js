@@ -10,7 +10,7 @@ function generateId() {
   return 'sess-' + randomBytes(4).toString('hex');
 }
 
-export function createSession({ name, cwd }) {
+export function createSession({ name, cwd, projectId }) {
   const id = generateId();
   const shell = process.env.SHELL || '/bin/zsh';
   const resolvedCwd = (cwd || os.homedir()).replace(/^~/, os.homedir());
@@ -38,6 +38,7 @@ export function createSession({ name, cwd }) {
     id,
     name,
     cwd: resolvedCwd,
+    projectId: projectId || null,
     status: 'active',
     pid: ptyProcess.pid,
     pty: ptyProcess,
@@ -82,10 +83,10 @@ export function createSession({ name, cwd }) {
 
   // Persist session metadata to disk
   const meta = loadSessionMetadata();
-  meta.push({ id, name, cwd: session.cwd, createdAt: session.createdAt, endedAt: null });
+  meta.push({ id, name, cwd: session.cwd, projectId: session.projectId, createdAt: session.createdAt, endedAt: null });
   saveSessionMetadata(meta);
 
-  return { id, name, cwd: session.cwd, status: session.status, pid: session.pid, createdAt: session.createdAt };
+  return { id, name, cwd: session.cwd, projectId: session.projectId, status: session.status, pid: session.pid, createdAt: session.createdAt };
 }
 
 export function getSession(id) {
@@ -97,6 +98,7 @@ export function listSessions() {
     id: s.id,
     name: s.name,
     cwd: s.cwd,
+    projectId: s.projectId || null,
     status: s.status,
     pid: s.pid,
     createdAt: s.createdAt,
@@ -169,6 +171,7 @@ export function loadHistoricalSessions() {
       id: entry.id,
       name: entry.name,
       cwd: entry.cwd,
+      projectId: entry.projectId || null,
       status: 'historical',
       pid: null,
       pty: null,

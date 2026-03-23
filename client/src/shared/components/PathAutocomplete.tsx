@@ -2,6 +2,8 @@ import { useState, useRef, useCallback } from 'react'
 import { useAutocomplete } from '@/hooks/useAutocomplete.ts'
 import css from './PathAutocomplete.module.css'
 
+const EMPTY_ARRAY: string[] = []
+
 interface PathAutocompleteProps {
   value: string
   onChange: (value: string) => void
@@ -21,7 +23,7 @@ export function PathAutocomplete({
   const [selectedIdx, setSelectedIdx] = useState(-1)
   const inputRef = useRef<HTMLInputElement>(null)
 
-  const { data: suggestions = [] } = useAutocomplete(value, showDropdown)
+  const { data: suggestions = EMPTY_ARRAY } = useAutocomplete(value, showDropdown)
 
   /* Reset selection when suggestions change (render-time state adjustment) */
   const [prevSuggestions, setPrevSuggestions] = useState(suggestions)

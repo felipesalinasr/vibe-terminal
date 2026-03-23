@@ -23,8 +23,8 @@ export function sessionRoutes() {
   });
 
   router.post('/sessions', validate(createSessionSchema), asyncHandler(async (req, res) => {
-    const { name, cwd, templateId } = req.body;
-    const session = createSession({ name, cwd });
+    const { name, cwd, templateId, projectId } = req.body;
+    const session = createSession({ name, cwd, projectId });
 
     await ensureAgentDir(session.id);
     await createAgentConfig(session.id, name);

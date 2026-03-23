@@ -4,6 +4,7 @@ export interface SessionSummary {
   id: string
   name: string
   cwd: string
+  projectId?: string | null
   status: SessionStatus
   pid: number | null
   createdAt: number
@@ -18,6 +19,7 @@ export interface CreateSessionInput {
   name: string
   cwd?: string
   templateId?: string
+  projectId?: string
 }
 
 export interface ScrollbackResponse {
