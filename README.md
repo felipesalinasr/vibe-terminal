@@ -1,10 +1,10 @@
 # Vibe Terminal
 
-A kanban-style control plane for managing AI coding agents. Launch, monitor, and configure Claude Code sessions from a single dashboard.
+A kanban-style control plane for managing AI agents. Launch, monitor, and configure Claude Code and Codex sessions from a single dashboard.
 
 ## Overview
 
-Vibe Terminal provides a visual interface for running multiple Claude Code agents simultaneously. Each agent gets its own terminal session, configuration panel, and structured file organization.
+Vibe Terminal provides a visual interface for running multiple agents simultaneously. Each agent gets its own terminal session, configuration panel, and structured file organization.
 
 ### Key Features
 
